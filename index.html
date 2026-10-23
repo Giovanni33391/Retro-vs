@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Retro Speedrun VS - Ghost Runner Online & Bot Practice</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Drag and drop whole screen overlay -->
+  <div id="dragDropOverlay" class="drag-drop-overlay">
+    <div class="drop-target-box">
+      <div class="drop-icon">🎮</div>
+      <h2>¡SUELTA TU ROM AQUÍ!</h2>
+      <p>Soporta .nes (SMB1), .sfc/.smc (SMW) y .bin/.md/.gen (Sonic 1, 2, 3&K)</p>
+    </div>
+  </div>
+
+  <div class="arcade-container">
+    <!-- Header -->
+    <header class="arcade-header">
+      <div class="title-badge">NES 8-BIT</div>
+      <h1 class="game-title">SUPER MARIO BROS</h1>
+      <div class="subtitle">MULTI-SYSTEM SPEEDRUN VS • GHOST RUNNER P2P</div>
+    </header>
+
+    <!-- Visual Game Selector Bar -->
+    <nav id="gameSelectorBar" class="game-selector-nav"></nav>
+
+    <!-- ROM Cache Status & Management Bar -->
+    <section id="romCacheBar" class="rom-cache-section"></section>
+
+    <!-- Mode Selector & Controls -->
+    <nav class="mode-bar">
+      <button id="modeBotBtn" class="mode-btn active" title="Práctica offline contra bot IA reactivo">
+        🤖 PRÁCTICA BOT
+      </button>
+      <button id="modeOnlineBtn" class="mode-btn" title="Compite contra un amigo vía WebRTC P2P con salas">
+        🌐 DESAFÍO ONLINE
+      </button>
+      <button id="modeSoloBtn" class="mode-btn" title="Entrenamiento Contrarreloj">
+        ⏱️ SOLO TRIAL
+      </button>
+      <button id="audioToggleBtn" class="tool-btn">🔊 Sonido: On</button>
+      <button id="resetGameBtn" class="tool-btn">🔄 Reiniciar</button>
+    </nav>
+
+    <!-- Network / Room Status -->
+    <div id="netStatus" class="net-status">Modo: Práctica vs Bot (Ghost Runner)</div>
+
+    <!-- Main Game Canvas (Auto-scaled pixel-perfect) -->
+    <div class="canvas-wrapper">
+      <div class="screen-bezel">
+        <canvas id="gameCanvas" width="256" height="280"></canvas>
+      </div>
+
+      <!-- Synchronized 3-2-1 Countdown Overlay -->
+      <div id="countdownOverlay" class="countdown-overlay">
+        <div id="countdownNumber" class="countdown-tick">3</div>
+      </div>
+
+      <!-- Loading / ROM Missing Overlay -->
+      <div id="loadingOverlay" class="overlay">
+        <div class="loader-box">
+          <div class="spinner"></div>
+          <p id="loadingStatus">Iniciando motor retro...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Virtual Gamepad -->
+    <div id="touchControlsContainer" class="touch-container"></div>
+
+    <!-- Keybindings Guide -->
+    <footer class="arcade-footer">
+      <div class="key-guide">
+        <span class="key-pill"><kbd>◀</kbd><kbd>▶</kbd> / <kbd>A</kbd><kbd>D</kbd> Mover</span>
+        <span class="key-pill"><kbd>Z</kbd> / <kbd>J</kbd> Correr / Y</span>
+        <span class="key-pill"><kbd>X</kbd> / <kbd>K</kbd> Saltar / A</span>
+        <span class="key-pill"><kbd>C</kbd> / <kbd>L</kbd> Spindash / Giro</span>
+        <span class="key-pill"><kbd>Enter</kbd> Start</span>
+        <span class="key-pill"><kbd>Shift</kbd> Select</span>
+      </div>
+      <div class="legal-note">Multi-System Ghost Runner • IndexedDB Cache Instant Boot • Vercel Ready • 60 FPS</div>
+    </footer>
+  </div>
+
+  <!-- Room Modal for WebRTC Online Matchmaking -->
+  <dialog id="roomModal" class="retro-dialog">
+    <div class="dialog-content">
+      <h2>🌐 SALA DE DESAFÍO SPEEDRUN</h2>
+      <p>Compite en tiempo real contra otro jugador con sincronización P2P WebRTC sin latencia.</p>
+      
+      <div class="room-actions">
+        <button id="createRoomBtn" class="btn btn-primary">⚡ Crear Nueva Sala / Desafío</button>
+        
+        <div class="join-box">
+          <input type="text" id="joinRoomInput" placeholder="Código (ej. SPEED-4821)" maxlength="12">
+          <button id="joinRoomBtn" class="btn btn-secondary">Unirse</button>
+        </div>
+      </div>
+
+      <div id="roomCreatedSection" class="created-section hidden">
+        <p>Tu Código de Sala: <strong id="currentRoomCode" class="room-code-tag">SPEED-XXXX</strong></p>
+        <div class="share-box">
+          <input type="text" id="roomShareLink" readonly>
+          <button id="copyLinkBtn" class="btn btn-copy">📋 Copiar Enlace</button>
+        </div>
+        <p class="hint">¡Envía este enlace a tu rival! Se unirá directamente al juego seleccionado.</p>
+        <div id="challengeModalStatus" class="challenge-modal-status">Estado: WAITING_RIVAL</div>
+        <button id="readyMatchBtn" class="btn btn-ready" style="display:none;">¡ESTOY LISTO!</button>
+      </div>
+
+      <button id="closeModalBtn" class="btn btn-close">Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- Victory Podium Modal -->
+  <dialog id="podiumModal" class="retro-dialog podium-dialog"></dialog>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+
+# Local cache & temporary files
+.cache/
+.temp/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Legal compliance (BYOR model - ROMs are user-loaded in browser RAM)
+*.nes
+*.sfc
+*.smc
+*.bin
+*.md
+*.gen
+!README.md
