@@ -96,6 +96,7 @@ function configureCanvasForGame(gameId) {
   const profile = getGameProfile(gameId);
   masterCanvas.width = profile.width;
   masterCanvas.height = profile.totalCanvasHeight;
+  masterCanvas.style.aspectRatio = `${profile.width} / ${profile.totalCanvasHeight}`;
 
   offscreenCanvas.width = profile.width;
   offscreenCanvas.height = profile.height;
@@ -538,8 +539,46 @@ function setupUI() {
     resetRace();
   });
 
+  // Toggle ROM Status Drawer
+  const btnRom = document.getElementById('romToggleBtn');
+  const subDrawer = document.getElementById('subBarDrawer');
+  if (btnRom && subDrawer) {
+    btnRom.addEventListener('click', () => {
+      subDrawer.classList.toggle('open');
+      btnRom.classList.toggle('active', subDrawer.classList.contains('open'));
+    });
+  }
+
+  // Toggle Fullscreen Viewport
+  const btnFullscreen = document.getElementById('fullscreenBtn');
+  if (btnFullscreen) {
+    btnFullscreen.addEventListener('click', () => {
+      const bezel = document.querySelector('.screen-bezel') || masterCanvas;
+      if (!document.fullscreenElement) {
+        if (bezel.requestFullscreen) {
+          bezel.requestFullscreen();
+        } else if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    });
+  }
+
   // Mobile Touch Controls
   const touchContainer = document.getElementById('touchControlsContainer');
+  const btnTouch = document.getElementById('touchToggleBtn');
+  if (btnTouch && touchContainer) {
+    btnTouch.addEventListener('click', () => {
+      touchContainer.classList.toggle('force-show');
+      const active = touchContainer.classList.contains('force-show');
+      btnTouch.classList.toggle('active', active);
+    });
+  }
+
   touchControls = new TouchControls(touchContainer, (btnIndex, isPressed) => {
     audio.unlock();
     if (state.mode === 'ONLINE' && webrtc.challengeState === CHALLENGE_STATES.COUNTDOWN) {

@@ -151,13 +151,18 @@ async function runTestSuite() {
   }
   console.log(`  -> GenesisRunner Sonic 1: FastBoot a X=${genT.x}, Y=${genT.y}, CamX=${genT.cam_x}`);
   // Palette color verification (0x00RRGGBB format check)
+  const nesSky = nesRunner.nes.ppu.palTable.getEntry(0x22);
+  const nesMarioRed = nesRunner.nes.ppu.palTable.getEntry(0x16);
+  if (nesSky !== 0x5C94FC || nesMarioRed !== 0xD82800) {
+    throw new Error(`Paleta de colores invertida en NesRunner: Sky=0x${nesSky.toString(16)}, MarioRed=0x${nesMarioRed.toString(16)} (esperado Sky=0x5C94FC, MarioRed=0xD82800)`);
+  }
   if (snesRunner.colors.sky !== 0xFF58D8FC || snesRunner.colors.marioRed !== 0xFFFC2810) {
     throw new Error('Paleta de colores invertida en SnesRunner (esperado 0x00RRGGBB)');
   }
   if (genRunner.colors.sonicBlue !== 0xFF0070EC || genRunner.colors.sonicRed !== 0xFFE82010) {
     throw new Error('Paleta de colores invertida en GenesisRunner (esperado 0x00RRGGBB)');
   }
-  console.log("  -> Paletas de colores auténticas verificadas (0x00RRGGBB): SMW Sky=#58D8FC, Sonic=#0070EC");
+  console.log("  -> Paletas de colores auténticas verificadas (0x00RRGGBB): NES Sky=#5C94FC/Mario=#D82800, SMW Sky=#58D8FC, Sonic=#0070EC");
   console.log("  -> PASADO: Todos los emuladores arrancan instantáneamente en sus líneas de salida.");
 
   // -------------------------------------------------------------------------

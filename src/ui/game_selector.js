@@ -33,7 +33,7 @@ export class GameSelector {
         ${profiles.map(p => {
           const isActive = (p.id === this.activeGameId);
           const isCached = this.cachedGames.has(p.id);
-          const cacheLabel = isCached ? '💾 LISTA' : '📂 ROM';
+          const cacheLabel = isCached ? 'LISTA' : 'ROM';
           const cacheClass = isCached ? 'cache-ready' : 'cache-missing';
 
           let icon = '🍄';
@@ -43,18 +43,11 @@ export class GameSelector {
           else if (p.id === 'sonic3k') icon = '💎';
 
           return `
-            <button class="game-card ${isActive ? 'active' : ''}" data-game="${p.id}" title="${p.name} (${p.systemName})">
-              <div class="game-badge-row">
-                <span class="sys-badge ${p.system}">${p.systemBadge}</span>
-                <span class="cache-pill ${cacheClass}">${cacheLabel}</span>
-              </div>
-              <div class="game-card-body">
-                <span class="game-icon">${icon}</span>
-                <div class="game-meta">
-                  <div class="game-name">${p.name}</div>
-                  <div class="game-hero-vs">${p.hero} vs ${p.rival}</div>
-                </div>
-              </div>
+            <button class="game-card game-pill ${isActive ? 'active' : ''}" data-game="${p.id}" title="${p.name} (${p.systemName}) - ${isCached ? 'ROM en caché' : 'Requiere ROM'}">
+              <span class="pill-icon">${icon}</span>
+              <span class="pill-name">${p.shortName || p.name}</span>
+              <span class="sys-badge pill-sys ${p.system}">${p.system.toUpperCase()}</span>
+              <span class="cache-pill pill-dot ${cacheClass}" title="${cacheLabel}"></span>
             </button>
           `;
         }).join('')}

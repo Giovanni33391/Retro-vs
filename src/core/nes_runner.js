@@ -2,6 +2,7 @@
 import { NES, Controller } from 'jsnes';
 import { BaseRunner } from './base_runner.js';
 import { getGameProfile, GAME_IDS } from '../profiles/game_profiles.js';
+import { NES_PALETTE } from '../nes/nes_palette.js';
 
 export class NesRunner extends BaseRunner {
   constructor(options = {}) {
@@ -29,6 +30,22 @@ export class NesRunner extends BaseRunner {
         }
       }
     });
+
+    this.applyAuthenticPalette();
+  }
+
+  applyAuthenticPalette() {
+    if (!this.nes || !this.nes.ppu || !this.nes.ppu.palTable) return;
+    for (let i = 0; i < 64; i++) {
+      this.nes.ppu.palTable.curTable[i] = NES_PALETTE[i];
+    }
+    this.nes.ppu.palTable.currentEmph = -1;
+    this.nes.ppu.palTable.makeTables();
+    this.nes.ppu.palTable.setEmphasis(0);
+    this.nes.ppu.palTable.getEntry = (i) => NES_PALETTE[i & 0x3F];
+    if (this.nes.ppu.updatePalettes) {
+      this.nes.ppu.updatePalettes();
+    }
   }
 
   loadRom(romBinary) {
@@ -42,6 +59,7 @@ export class NesRunner extends BaseRunner {
     }
     this.romData = binary;
     this.nes.loadROM(binary);
+    this.applyAuthenticPalette();
     this.romLoaded = true;
     this.frameCounter = 0;
   }
@@ -49,6 +67,7 @@ export class NesRunner extends BaseRunner {
   reset() {
     if (this.romLoaded) {
       this.nes.reloadROM();
+      this.applyAuthenticPalette();
       this.frameCounter = 0;
       this.fastBoot();
     }
@@ -56,6 +75,7 @@ export class NesRunner extends BaseRunner {
 
   fastBoot() {
     if (!this.romLoaded) return;
+    this.applyAuthenticPalette();
     // Advance quickly past title screen and lives pre-level screen straight to starting line (x=40)
     for (let f = 0; f < 50; f++) this.nes.frame();
     this.buttonDown(1, 3); // Start
@@ -67,6 +87,7 @@ export class NesRunner extends BaseRunner {
         break;
       }
     }
+    this.applyAuthenticPalette();
   }
 
   frame() {

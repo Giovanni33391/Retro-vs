@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Drag and drop whole screen overlay -->
@@ -19,60 +19,71 @@
     </div>
   </div>
 
-  <div class="arcade-container">
-    <!-- Header -->
-    <header class="arcade-header">
-      <div class="title-badge">NES 8-BIT</div>
-      <h1 class="game-title">SUPER MARIO BROS</h1>
-      <div class="subtitle">MULTI-SYSTEM SPEEDRUN VS • GHOST RUNNER P2P</div>
+  <div class="arcade-app">
+    <!-- Top Modern Arcade Header Bar -->
+    <header class="arcade-navbar">
+      <!-- Brand & Game Name -->
+      <div class="brand-zone">
+        <span class="title-badge">NES 8-BIT</span>
+        <h1 class="game-title">SUPER MARIO BROS.</h1>
+      </div>
+
+      <!-- Compact Visual Game Selector (Pill bar) -->
+      <nav id="gameSelectorBar" class="game-selector-nav"></nav>
+
+      <!-- Mode Selector -->
+      <nav class="mode-bar">
+        <button id="modeBotBtn" class="mode-btn active" title="Práctica offline contra bot IA reactivo">
+          🤖 BOT
+        </button>
+        <button id="modeOnlineBtn" class="mode-btn" title="Compite contra un amigo vía WebRTC P2P">
+          🌐 ONLINE
+        </button>
+        <button id="modeSoloBtn" class="mode-btn" title="Entrenamiento Contrarreloj">
+          ⏱️ SOLO
+        </button>
+      </nav>
+
+      <!-- Quick Action Utility Icons -->
+      <div class="nav-utils">
+        <button id="romToggleBtn" class="tool-btn" title="Ver / Cambiar ROM en Caché">💾 ROM</button>
+        <button id="audioToggleBtn" class="tool-btn" title="Sonido: On/Off">🔊</button>
+        <button id="resetGameBtn" class="tool-btn" title="Reiniciar">🔄</button>
+        <button id="touchToggleBtn" class="tool-btn" title="Alternar Controles Táctiles">🎮</button>
+        <button id="fullscreenBtn" class="tool-btn" title="Pantalla Completa">⛶</button>
+      </div>
     </header>
 
-    <!-- Visual Game Selector Bar -->
-    <nav id="gameSelectorBar" class="game-selector-nav"></nav>
-
-    <!-- ROM Cache Status & Management Bar -->
-    <section id="romCacheBar" class="rom-cache-section"></section>
-
-    <!-- Mode Selector & Controls -->
-    <nav class="mode-bar">
-      <button id="modeBotBtn" class="mode-btn active" title="Práctica offline contra bot IA reactivo">
-        🤖 PRÁCTICA BOT
-      </button>
-      <button id="modeOnlineBtn" class="mode-btn" title="Compite contra un amigo vía WebRTC P2P con salas">
-        🌐 DESAFÍO ONLINE
-      </button>
-      <button id="modeSoloBtn" class="mode-btn" title="Entrenamiento Contrarreloj">
-        ⏱️ SOLO TRIAL
-      </button>
-      <button id="audioToggleBtn" class="tool-btn">🔊 Sonido: On</button>
-      <button id="resetGameBtn" class="tool-btn">🔄 Reiniciar</button>
-    </nav>
-
-    <!-- Network / Room Status -->
-    <div id="netStatus" class="net-status">Modo: Práctica vs Bot (Ghost Runner)</div>
-
-    <!-- Main Game Canvas (Auto-scaled pixel-perfect) -->
-    <div class="canvas-wrapper">
-      <div class="screen-bezel">
-        <canvas id="gameCanvas" width="256" height="280"></canvas>
-      </div>
-
-      <!-- Synchronized 3-2-1 Countdown Overlay -->
-      <div id="countdownOverlay" class="countdown-overlay">
-        <div id="countdownNumber" class="countdown-tick">3</div>
-      </div>
-
-      <!-- Loading / ROM Missing Overlay -->
-      <div id="loadingOverlay" class="overlay">
-        <div class="loader-box">
-          <div class="spinner"></div>
-          <p id="loadingStatus">Iniciando motor retro...</p>
-        </div>
-      </div>
+    <!-- Collapsible ROM Cache & Net Status Drawer -->
+    <div id="subBarDrawer" class="sub-bar-drawer">
+      <section id="romCacheBar" class="rom-cache-section"></section>
+      <div id="netStatus" class="net-status">Modo: Práctica vs Bot (Ghost Runner)</div>
     </div>
 
-    <!-- Mobile Virtual Gamepad -->
-    <div id="touchControlsContainer" class="touch-container"></div>
+    <!-- Centerpiece: Main Arcade Game Viewport (Hero Screen) -->
+    <main class="arcade-viewport">
+      <div class="canvas-wrapper">
+        <div class="screen-bezel">
+          <canvas id="gameCanvas" width="256" height="280"></canvas>
+        </div>
+
+        <!-- Synchronized 3-2-1 Countdown Overlay -->
+        <div id="countdownOverlay" class="countdown-overlay">
+          <div id="countdownNumber" class="countdown-tick">3</div>
+        </div>
+
+        <!-- Loading / ROM Missing Overlay -->
+        <div id="loadingOverlay" class="overlay">
+          <div class="loader-box">
+            <div class="spinner"></div>
+            <p id="loadingStatus">Iniciando motor retro...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Virtual Gamepad (Hidden on Desktop PC by default) -->
+      <div id="touchControlsContainer" class="touch-container"></div>
+    </main>
 
     <!-- Keybindings Guide -->
     <footer class="arcade-footer">
@@ -84,7 +95,7 @@
         <span class="key-pill"><kbd>Enter</kbd> Start</span>
         <span class="key-pill"><kbd>Shift</kbd> Select</span>
       </div>
-      <div class="legal-note">Multi-System Ghost Runner • IndexedDB Cache Instant Boot • Vercel Ready • 60 FPS</div>
+      <div class="legal-note">Multi-System Speedrun VS • 60 FPS Pixel-Perfect • WebRTC P2P</div>
     </footer>
   </div>
 
