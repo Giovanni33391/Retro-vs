@@ -76,6 +76,7 @@ export class GhostRenderer {
 
   // Draw sprite onto an offscreen canvas
   createSpriteCanvas(pattern, facingLeft = false) {
+    if (typeof document === 'undefined') return null;
     const canvas = document.createElement("canvas");
     canvas.width = 16;
     canvas.height = 16;
@@ -123,11 +124,20 @@ export class GhostRenderer {
 
   // Render ghost runner onto viewport (ctx is 256x240 game viewport)
   renderGhost(ctx, marioTelem, rivalTelem) {
-    if (!marioTelem || !rivalTelem) return;
+    if (!marioTelem || !rivalTelem || !ctx) return;
+
+    // Guard against dead rival, bottom pit wrap, or transitional Y coordinates (eliminates floating in the sky)
+    if (rivalTelem.isDead || rivalTelem.y <= 16 || rivalTelem.y >= 224) return;
 
     const relX = rivalTelem.x - marioTelem.cam_x;
     const relY = rivalTelem.y;
     const distPx = rivalTelem.x - marioTelem.x;
+
+    // Check if Mario Rival is in a different level or world
+    if (marioTelem.world !== rivalTelem.world || marioTelem.level !== rivalTelem.level) {
+      this.renderOffscreenTracker(ctx, relX, distPx, relY, `W${rivalTelem.world}-${rivalTelem.level}`);
+      return;
+    }
 
     // Check if Mario Rival is within the camera viewport
     const onScreen = (relX >= -16 && relX <= 256);
@@ -138,7 +148,9 @@ export class GhostRenderer {
       ctx.globalAlpha = 0.50; // Authentic 50% translucency
       const facingLeft = (rivalTelem.facing === 1);
       const sprite = this.getGhostSprite(rivalTelem.state, facingLeft);
-      ctx.drawImage(sprite, Math.round(relX), Math.round(relY));
+      if (sprite) {
+        ctx.drawImage(sprite, Math.round(relX), Math.round(relY));
+      }
       ctx.restore();
     } else {
       // Mario Rival is off-screen: Render Directional Chevron / Tracker Badge
@@ -146,16 +158,17 @@ export class GhostRenderer {
     }
   }
 
-  renderOffscreenTracker(ctx, relX, distPx, targetY) {
+  renderOffscreenTracker(ctx, relX, distPx, targetY, customTag = null) {
     ctx.save();
     const clampedY = Math.max(30, Math.min(210, targetY || 120));
-    const badgeW = 76;
+    const badgeW = customTag ? 92 : 76;
     const badgeH = 16;
+    const label = customTag ? `[MARIO ${customTag}]` : `[MARIO]`;
 
     if (relX > 256) {
       // Mario Rival is ahead (to the right)
       const badgeX = 256 - badgeW - 8;
-      const text = `[MARIO] ▶ +${distPx}px`;
+      const text = `${label} ▶ +${distPx}px`;
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
       ctx.fillRect(badgeX - 4, clampedY - 8, badgeW, badgeH);
@@ -169,7 +182,7 @@ export class GhostRenderer {
     } else if (relX < -16) {
       // Mario Rival is behind (to the left)
       const badgeX = 8;
-      const text = `◀ [MARIO] ${distPx}px`;
+      const text = `◀ ${label} ${distPx}px`;
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
       ctx.fillRect(badgeX - 4, clampedY - 8, badgeW, badgeH);

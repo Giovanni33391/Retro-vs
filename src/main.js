@@ -19,6 +19,7 @@ const state = {
   mode: 'BOT', // 'ONLINE', 'BOT', 'SOLO'
   romData: null,
   isPaused: false,
+  isCountingDown: false,
   raceStartTime: 0,
   elapsedTimeMs: 0,
   hasStartedRace: false,
@@ -39,7 +40,7 @@ let offscreenImageData = null;
 let offscreenBuf32 = null;
 
 // Audio & Emulators
-const audio = new NesAudio();
+const audio = new NesAudio(48000);
 let playerRunner = null;
 let rivalBotRunner = null;
 const bot = new MultiGhostBot(state.gameId);
@@ -146,6 +147,8 @@ async function switchGame(newGameId) {
   state.gameId = newGameId;
   state.playerFinished = false;
   state.rivalFinished = false;
+  state.hasStartedRace = false;
+  state.isCountingDown = false;
   state.elapsedTimeMs = 0;
   bot.setGame(newGameId);
   configureCanvasForGame(newGameId);
@@ -270,7 +273,8 @@ function initRunners() {
   bot.reset();
 
   state.raceStartTime = performance.now();
-  state.hasStartedRace = true;
+  state.hasStartedRace = false; // Freeze until race starts
+  state.isCountingDown = false;
   state.playerFinished = false;
   state.rivalFinished = false;
 }
@@ -301,6 +305,8 @@ function handleChallengeStateChange(challengeState, details) {
     const roomModal = document.getElementById('roomModal');
     if (roomModal && typeof roomModal.close === 'function') roomModal.close();
     if (fcLobby) fcLobby.switchView('arena');
+    state.isCountingDown = true;
+    state.hasStartedRace = false;
     if (playerRunner) playerRunner.reset();
     if (rivalBotRunner) rivalBotRunner.reset();
   } else if (challengeState === CHALLENGE_STATES.RACING) {
@@ -309,9 +315,10 @@ function handleChallengeStateChange(challengeState, details) {
       if (countOverlay) countOverlay.classList.remove('active');
     }, 800);
     // Start synchronized race frame
+    state.isCountingDown = false;
+    state.hasStartedRace = true;
     state.raceStartTime = performance.now();
     state.elapsedTimeMs = 0;
-    state.hasStartedRace = true;
     state.playerFinished = false;
     state.rivalFinished = false;
   }
@@ -334,6 +341,8 @@ function showCountdownOverlay(val) {
 
 function startPracticeCountdown() {
   resetRace();
+  state.isCountingDown = true;
+  state.hasStartedRace = false;
   fcLobby.switchView('arena');
   let step = 3;
   showCountdownOverlay(step);
@@ -348,9 +357,10 @@ function startPracticeCountdown() {
       clearInterval(timer);
       const countOverlay = document.getElementById('countdownOverlay');
       if (countOverlay) countOverlay.classList.remove('active');
+      state.isCountingDown = false;
+      state.hasStartedRace = true;
       state.raceStartTime = performance.now();
       state.elapsedTimeMs = 0;
-      state.hasStartedRace = true;
     }
   }, 900);
 }
@@ -397,6 +407,36 @@ function gameLoop(timestamp) {
   if (delta < targetFrameTime - 2) return;
   lastTime = timestamp;
 
+  // If in countdown or race not started, freeze simulation on starting line (render static frame 0)
+  if (state.isCountingDown || !state.hasStartedRace) {
+    const playerTelem = playerRunner.getTelemetry();
+    const rivalTelem = rivalBotRunner ? rivalBotRunner.getTelemetry() : null;
+    const profile = getGameProfile(state.gameId);
+    const modeLabel = (state.mode === 'ONLINE') ? 'ONLINE VS' : (state.mode === 'BOT' ? 'BOT PRACTICE' : 'SOLO TRIAL');
+
+    telemetryBar.render(masterCtx, playerTelem, rivalTelem, modeLabel, 0, state.gameId);
+
+    // Render current static frame buffer
+    const fb = playerRunner.frameBuffer;
+    const pixelCount = profile.width * profile.height;
+    for (let i = 0; i < pixelCount; i++) {
+      const pixel = fb[i];
+      const r = (pixel >> 16) & 0xFF;
+      const g = (pixel >> 8) & 0xFF;
+      const b = pixel & 0xFF;
+      offscreenBuf32[i] = 0xFF000000 | (b << 16) | (g << 8) | r;
+    }
+    offscreenCtx.putImageData(offscreenImageData, 0, 0);
+
+    // Render ghost at starting position
+    if (rivalTelem) {
+      ghostRenderer.renderGhost(offscreenCtx, playerTelem, rivalTelem, state.gameId);
+    }
+
+    masterCtx.drawImage(offscreenCanvas, 0, profile.headerHeight);
+    return;
+  }
+
   // 1. Step Player Runner (60 FPS)
   playerRunner.frame();
   const playerTelem = playerRunner.getTelemetry();
@@ -412,7 +452,7 @@ function gameLoop(timestamp) {
   let rivalTelem = null;
 
   if (state.mode === 'BOT') {
-    if (rivalBotRunner) {
+    if (rivalBotRunner && !state.rivalFinished) {
       bot.update(rivalBotRunner);
       rivalBotRunner.frame();
       rivalTelem = rivalBotRunner.getTelemetry();
@@ -422,6 +462,8 @@ function gameLoop(timestamp) {
         state.rivalFinishTimeMs = state.elapsedTimeMs;
         checkRaceConclusion();
       }
+    } else if (rivalBotRunner) {
+      rivalTelem = rivalBotRunner.getTelemetry();
     }
   } else if (state.mode === 'ONLINE') {
     // Transmit telemetry over WebRTC DataChannel
@@ -481,6 +523,9 @@ const keyMap = {
 window.addEventListener('keydown', (e) => {
   audio.unlock();
   fcSound.init();
+  if (state.isCountingDown || !state.hasStartedRace) {
+    return;
+  }
   if (state.mode === 'ONLINE' && webrtc.challengeState === CHALLENGE_STATES.COUNTDOWN) {
     return;
   }
@@ -667,6 +712,9 @@ function setupUI() {
   touchControls = new TouchControls(touchContainer, (btnIndex, isPressed) => {
     audio.unlock();
     fcSound.init();
+    if (state.isCountingDown || !state.hasStartedRace) {
+      return;
+    }
     if (state.mode === 'ONLINE' && webrtc.challengeState === CHALLENGE_STATES.COUNTDOWN) {
       return;
     }
@@ -743,6 +791,8 @@ function resetRace() {
   if (rivalBotRunner) rivalBotRunner.reset();
   bot.reset();
   if (podiumModal) podiumModal.close();
+  state.hasStartedRace = false;
+  state.isCountingDown = false;
   state.raceStartTime = performance.now();
   state.elapsedTimeMs = 0;
   state.playerFinished = false;

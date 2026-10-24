@@ -1,7 +1,8 @@
-// test_fightcade_ui.js - Unit tests for Fightcade UI and Audio subsystems
+// test_fightcade_ui.js - Unit tests for Fightcade UI, Audio subsystems and Sprite Facing
 import { FightcadeSound } from './src/ui/fightcade_sound.js';
 import { FightcadeLobby } from './src/ui/fightcade_lobby.js';
-import { GAME_IDS, getAllGameProfiles } from './src/profiles/game_profiles.js';
+import { GAME_IDS, getAllGameProfiles, getGameProfile } from './src/profiles/game_profiles.js';
+import { NesAudio } from './src/nes/nes_audio.js';
 
 console.log("==================================================================");
 console.log("  INICIANDO PRUEBAS UNITARIAS DE FIGHTCADE LOBBY & AUDIO");
@@ -42,6 +43,9 @@ function createMockElement(tag, id = '') {
     placeholder: '',
     title: '',
     listeners: {},
+    attributes: {},
+    setAttribute(k, v) { this.attributes[k] = v; },
+    removeAttribute(k) { delete this.attributes[k]; },
     classList: {
       _classes: new Set(),
       add(c) { this._classes.add(c); },
@@ -56,9 +60,6 @@ function createMockElement(tag, id = '') {
         else { this.add(c); return true; }
       }
     },
-    attributes: {},
-    setAttribute(k, v) { this.attributes[k] = v; },
-    removeAttribute(k) { delete this.attributes[k]; },
     addEventListener(event, fn) {
       if (!this.listeners[event]) this.listeners[event] = [];
       this.listeners[event].push(fn);
@@ -185,6 +186,27 @@ if (mockDocElements.challengerName.textContent !== 'RetroPro') throw new Error("
 
 lobby.closeChallengeModal();
 console.log("  -> PASADO: Modal de desafío entrante y callbacks validados.");
+
+// [TEST 7] Verificación de NesAudio y orientación canónica del sprite (Anti-Moonwalk)
+console.log("\n[TEST 7] Verificación de NesAudio sample rate y orientación canónica...");
+const nesAudio = new NesAudio(48000);
+if (nesAudio.getSampleRate() !== 48000) throw new Error("NesAudio debe reportar sample rate correcto");
+
+const smbProfile = getGameProfile('smb1');
+// Test facing Right (0x0033 = 1): should result in facing = 2 (Right, facingLeft = false)
+const memRight = new Uint8Array(2048);
+memRight[0x006D] = 0; memRight[0x0086] = 50;
+memRight[0x0033] = 1; // Facing Right in SMB1 NES
+const telemRight = smbProfile.parseTelemetry(memRight);
+if (telemRight.facing !== 2) throw new Error(`Mario facing Right debe ser 2, obtuvo ${telemRight.facing}`);
+
+// Test facing Left (0x0033 = 2): should result in facing = 1 (Left, facingLeft = true)
+const memLeft = new Uint8Array(2048);
+memLeft[0x006D] = 0; memLeft[0x0086] = 50;
+memLeft[0x0033] = 2; // Facing Left in SMB1 NES
+const telemLeft = smbProfile.parseTelemetry(memLeft);
+if (telemLeft.facing !== 1) throw new Error(`Mario facing Left debe ser 1, obtuvo ${telemLeft.facing}`);
+console.log("  -> PASADO: Orientación del sprite (anti-reversa) y audio pipeline certificados.");
 
 console.log("\n==================================================================");
 console.log("  ¡TODAS LAS PRUEBAS DE FIGHTCADE PASARON EXITOSAMENTE (100%)!");

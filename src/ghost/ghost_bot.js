@@ -25,12 +25,12 @@ export class GhostBot {
     const y = mem[0x00CE];
 
     // Reset bot states during loading / death / spawning
-    if ([0, 4, 5, 6, 7, 11].includes(sub)) {
+    if ([0, 1, 3, 4, 5, 6, 7, 11].includes(sub) || x >= 3160) {
       this._bot_jump_hold = 0;
       this._bot_jump_cooldown = 0;
       this._bot_stuck_counter = 0;
       this._bot_prev_air = 0;
-      this._bot_prev_x = 40;
+      this.applyInputs(nesRunner, 0);
       return;
     }
 

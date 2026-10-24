@@ -44,9 +44,12 @@ export const GAME_PROFILES = {
       const world = (mem[0x075F] || 0) + 1;
       const level = (mem[0x075C] || 0) + 1;
       const state = mem[0x001D] || 0; // 0=ground, 1=walk, 2=jump, 3=flagpole
-      const facing = (mem[0x0033] === 1) ? 1 : 2; // 1=left, 2=right
+      const isFacingLeft = (mem[0x0033] === 2 || mem[0x0045] === 2);
+      const facing = isFacingLeft ? 1 : 2; // 1=left, 2=right
       const powerup = mem[0x0756] || 0;
-      const finished = (state === 3) || (level === 4 && x >= 2250);
+      const sub = mem[0x000E] || 0;
+      const isDead = (sub === 6 || mem[0x0770] === 2 || y > 230);
+      const finished = (state === 3) || (level === 1 && x >= 3160) || (level === 4 && x >= 2250);
 
       return {
         gameId: GAME_IDS.SMB1,
@@ -59,6 +62,7 @@ export const GAME_PROFILES = {
         state,
         facing,
         powerup,
+        isDead,
         finished
       };
     }

@@ -120,6 +120,7 @@ export class MultiGhostRenderer {
       return;
     }
 
+    if (remoteTelem.isDead || remoteTelem.y <= 16) return;
     const profile = getGameProfile(gameId);
     const viewWidth = profile.width;
     const viewHeight = profile.height;

@@ -14,8 +14,14 @@ export class NesRunner extends BaseRunner {
     });
 
     this.profile = getGameProfile(GAME_IDS.SMB1);
+    this.isFastBooting = false;
+
+    const sampleRate = (this.audioHandler && typeof this.audioHandler.getSampleRate === 'function')
+      ? this.audioHandler.getSampleRate()
+      : 48000;
 
     this.nes = new NES({
+      sampleRate,
       onFrame: (buffer) => {
         // Copy 256x240 buffer
         this.frameBuffer.set(buffer);
@@ -25,7 +31,7 @@ export class NesRunner extends BaseRunner {
         }
       },
       onAudioSample: (left, right) => {
-        if (this.audioHandler && !this.isMuted) {
+        if (this.audioHandler && !this.isMuted && !this.isFastBooting) {
           this.audioHandler.writeSample(left, right);
         }
       }
@@ -88,24 +94,32 @@ export class NesRunner extends BaseRunner {
 
   fastBoot() {
     if (!this.romLoaded) return;
-    this.applyAuthenticPalette();
-    // Advance quickly past title screen and lives pre-level screen straight to starting line (x=40)
-    for (let f = 0; f < 50; f++) this.nes.frame();
-    this.buttonDown(1, 3); // Start
-    for (let f = 0; f < 5; f++) this.nes.frame();
-    this.buttonUp(1, 3);
-    for (let f = 0; f < 135; f++) {
-      this.nes.frame();
-      if (this.mem && this.mem[0x0770] === 1 && this.mem[0x000E] === 8) {
-        break;
+    this.isFastBooting = true;
+    try {
+      this.applyAuthenticPalette();
+      // Advance quickly past title screen and lives pre-level screen straight to starting line (x=40)
+      for (let f = 0; f < 50; f++) this.nes.frame();
+      this.buttonDown(1, 3); // Start
+      for (let f = 0; f < 5; f++) this.nes.frame();
+      this.buttonUp(1, 3);
+      for (let f = 0; f < 135; f++) {
+        this.nes.frame();
+        if (this.mem && this.mem[0x0770] === 1 && this.mem[0x000E] === 8) {
+          break;
+        }
       }
+    } finally {
+      this.isFastBooting = false;
+      this.applyAuthenticPalette();
     }
-    this.applyAuthenticPalette();
   }
 
   frame() {
     if (this.romLoaded) {
       this.nes.frame();
+      if (this.audioHandler && typeof this.audioHandler.flush === 'function') {
+        this.audioHandler.flush();
+      }
     }
   }
 
