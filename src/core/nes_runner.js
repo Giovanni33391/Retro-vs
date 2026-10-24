@@ -31,18 +31,31 @@ export class NesRunner extends BaseRunner {
       }
     });
 
+    if (this.nes && typeof this.nes.reset === 'function') {
+      const origReset = this.nes.reset.bind(this.nes);
+      this.nes.reset = () => {
+        origReset();
+        this.applyAuthenticPalette();
+      };
+    }
+
     this.applyAuthenticPalette();
   }
 
   applyAuthenticPalette() {
     if (!this.nes || !this.nes.ppu || !this.nes.ppu.palTable) return;
-    for (let i = 0; i < 64; i++) {
-      this.nes.ppu.palTable.curTable[i] = NES_PALETTE[i];
-    }
-    this.nes.ppu.palTable.currentEmph = -1;
-    this.nes.ppu.palTable.makeTables();
-    this.nes.ppu.palTable.setEmphasis(0);
-    this.nes.ppu.palTable.getEntry = (i) => NES_PALETTE[i & 0x3F];
+    const pal = this.nes.ppu.palTable;
+    pal.loadNTSCPalette = () => {
+      for (let i = 0; i < 64; i++) {
+        pal.curTable[i] = NES_PALETTE[i];
+      }
+      pal.currentEmph = -1;
+      pal.makeTables();
+      pal.setEmphasis(0);
+    };
+    pal.loadPALPalette = pal.loadNTSCPalette;
+    pal.loadNTSCPalette();
+    pal.getEntry = (i) => NES_PALETTE[i & 0x3F];
     if (this.nes.ppu.updatePalettes) {
       this.nes.ppu.updatePalettes();
     }

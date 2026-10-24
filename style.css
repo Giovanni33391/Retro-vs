@@ -56,115 +56,210 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 100;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .brand-zone {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-width: 140px;
+  flex-shrink: 0;
 }
 
-.title-badge {
-  background: #252a42;
-  color: var(--gold);
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid rgba(252, 160, 68, 0.3);
-  white-space: nowrap;
-}
-
-.game-title {
+.brand-logo {
   font-family: 'Press Start 2P', monospace, sans-serif;
-  font-size: 11px;
-  color: #fff;
-  text-shadow: 1px 1px 0px #000;
+  font-size: 9px;
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(252, 160, 68, 0.4);
   white-space: nowrap;
   letter-spacing: 0.5px;
 }
 
-/* Segmented Game Selector Pills */
-.game-selector-nav {
+/* Interactive Arcade Game Selector Dropdown */
+.game-selector-container {
+  position: relative;
   display: flex;
   align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.game-selector-nav::-webkit-scrollbar {
-  display: none;
 }
 
-.game-selector-grid {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.game-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
-.game-card.game-pill {
+.game-dropdown-btn {
   background: #141726;
   border: 1px solid #282f4c;
   border-radius: 6px;
-  padding: 4px 8px;
-  color: var(--text-main);
+  padding: 4px 9px;
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 600;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
-.game-card.game-pill:hover {
-  background: #1f253d;
-  border-color: var(--accent-cyan);
-}
-
-.game-card.game-pill.active {
-  background: #252b47;
+.game-dropdown-btn:hover {
+  background: #1e243d;
   border-color: var(--gold);
-  box-shadow: 0 0 10px rgba(252, 160, 68, 0.35);
+  box-shadow: 0 0 10px rgba(252, 160, 68, 0.25);
 }
 
-.pill-icon {
+.game-dropdown-btn.open {
+  border-color: var(--gold);
+  background: #232a48;
+}
+
+.dropdown-icon {
   font-size: 13px;
 }
 
-.pill-name {
-  font-size: 10px;
-  font-weight: 700;
+.dropdown-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
-.sys-badge.pill-sys {
+.dropdown-badge {
   font-size: 7px;
-  padding: 1px 4px;
+  font-weight: 700;
+  padding: 1px 5px;
   border-radius: 3px;
-  background: #333a59;
   color: #fff;
 }
-.sys-badge.pill-sys.nes { background: #961b1b; }
-.sys-badge.pill-sys.snes { background: #4d3199; }
-.sys-badge.pill-sys.genesis { background: #164099; }
+.dropdown-badge.sys-nes { background: #961b1b; }
+.dropdown-badge.sys-snes { background: #4d3199; }
+.dropdown-badge.sys-genesis { background: #164099; }
 
-.cache-pill.pill-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  display: inline-block;
+.dropdown-chevron {
+  font-size: 7px;
+  color: var(--gold);
+  margin-left: 2px;
 }
-.cache-pill.pill-dot.cache-ready {
-  background: #38e45c;
-  box-shadow: 0 0 6px #38e45c;
+
+/* Floating Game Catalog Menu */
+.game-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 320px;
+  background: #0f121e;
+  border: 1px solid #2d3558;
+  border-radius: 10px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(252, 160, 68, 0.25);
+  padding: 6px;
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
 }
-.cache-pill.pill-dot.cache-missing {
-  background: #555c75;
+
+.game-dropdown-menu.show {
+  display: flex;
+  animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--gold);
+  padding: 4px 8px;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #1f253d;
+  margin-bottom: 2px;
+}
+
+.game-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.game-menu-item:hover {
+  background: #1b2035;
+  border-color: #3b456d;
+}
+
+.game-menu-item.selected {
+  background: #232b49;
+  border-color: var(--gold);
+  box-shadow: 0 0 10px rgba(252, 160, 68, 0.3);
+}
+
+.menu-item-icon {
+  font-size: 16px;
+}
+
+.menu-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.menu-item-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-item-meta {
+  font-size: 9px;
+  color: var(--text-dim);
+}
+
+.menu-item-badge {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #fff;
+}
+.menu-item-badge.sys-nes { background: #961b1b; }
+.menu-item-badge.sys-snes { background: #4d3199; }
+.menu-item-badge.sys-genesis { background: #164099; }
+
+.menu-item-cache {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.menu-item-cache.ready {
+  color: #38e45c;
+  background: rgba(56, 228, 92, 0.15);
+}
+.menu-item-cache.missing {
+  color: #8c92ab;
+  background: rgba(140, 146, 171, 0.1);
 }
 
 /* Mode Bar Group */
@@ -322,6 +417,7 @@ html, body {
 .arcade-viewport {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   width: 100%;
   max-width: 1100px;
   display: flex;
@@ -329,23 +425,27 @@ html, body {
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
 }
 
 .canvas-wrapper {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
-  min-height: 0;
+  overflow: hidden;
 }
 
 .screen-bezel {
-  height: 100%;
-  max-height: calc(100vh - 105px);
-  width: auto;
+  aspect-ratio: 256 / 280;
   max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -357,12 +457,27 @@ html, body {
   position: relative;
 }
 
+/* Landscape / Desktop: Viewport height is the primary constraint */
+@media (min-aspect-ratio: 1/1) {
+  .screen-bezel {
+    height: 100%;
+    width: auto;
+  }
+}
+
+/* Portrait / Mobile: Viewport width is the primary constraint */
+@media (max-aspect-ratio: 1/1) {
+  .screen-bezel {
+    width: 100%;
+    height: auto;
+  }
+}
+
 #gameCanvas {
+  width: 100%;
   height: 100%;
-  width: auto;
   max-width: 100%;
   max-height: 100%;
-  aspect-ratio: 256 / 280;
   object-fit: contain;
   display: block;
   image-rendering: pixelated;
@@ -788,25 +903,62 @@ kbd {
   .arcade-navbar {
     flex-wrap: wrap;
     justify-content: center;
+    gap: 6px;
+  }
+}
+
+@media (pointer: coarse), (max-width: 640px) {
+  .arcade-app {
+    padding: 4px;
+    gap: 4px;
+  }
+  .arcade-navbar {
+    padding: 4px 6px;
+    gap: 4px;
+    justify-content: space-between;
   }
   .brand-zone {
     display: none;
   }
-}
-
-@media (max-width: 600px) {
-  .arcade-app {
-    padding: 4px;
+  .dropdown-title {
+    font-size: 8px;
   }
-  .arcade-navbar {
-    padding: 4px;
-    gap: 4px;
+  .game-dropdown-menu {
+    width: min(290px, 94vw);
+    left: 0;
   }
-  .game-card.game-pill {
+  .mode-btn {
     padding: 3px 6px;
     font-size: 9px;
   }
-  .screen-bezel {
-    max-height: calc(100vh - 180px);
+  .tool-btn {
+    padding: 3px 6px;
+    font-size: 10px;
+    min-width: 26px;
+  }
+  .touch-container {
+    display: block !important;
+    width: 100%;
+    max-width: 440px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .touch-overlay {
+    padding: 4px 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .dpad-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  .action-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 12px;
+  }
+  .arcade-footer {
+    display: none !important;
   }
 }

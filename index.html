@@ -22,16 +22,15 @@
   <div class="arcade-app">
     <!-- Top Modern Arcade Header Bar -->
     <header class="arcade-navbar">
-      <!-- Brand & Game Name -->
-      <div class="brand-zone">
-        <span class="title-badge">NES 8-BIT</span>
-        <h1 class="game-title">SUPER MARIO BROS.</h1>
+      <!-- Left: Brand Logo & Interactive Game Selector Dropdown -->
+      <div class="nav-left">
+        <div class="brand-zone">
+          <span class="brand-logo">⚡ SPEEDRUN VS</span>
+        </div>
+        <div id="gameSelectorBar" class="game-selector-container"></div>
       </div>
 
-      <!-- Compact Visual Game Selector (Pill bar) -->
-      <nav id="gameSelectorBar" class="game-selector-nav"></nav>
-
-      <!-- Mode Selector -->
+      <!-- Center: Race Mode Selector -->
       <nav class="mode-bar">
         <button id="modeBotBtn" class="mode-btn active" title="Práctica offline contra bot IA reactivo">
           🤖 BOT
@@ -44,11 +43,11 @@
         </button>
       </nav>
 
-      <!-- Quick Action Utility Icons -->
+      <!-- Right: Quick Action Utility Icons -->
       <div class="nav-utils">
         <button id="romToggleBtn" class="tool-btn" title="Ver / Cambiar ROM en Caché">💾 ROM</button>
         <button id="audioToggleBtn" class="tool-btn" title="Sonido: On/Off">🔊</button>
-        <button id="resetGameBtn" class="tool-btn" title="Reiniciar">🔄</button>
+        <button id="resetGameBtn" class="tool-btn" title="Reiniciar Carrera">🔄</button>
         <button id="touchToggleBtn" class="tool-btn" title="Alternar Controles Táctiles">🎮</button>
         <button id="fullscreenBtn" class="tool-btn" title="Pantalla Completa">⛶</button>
       </div>

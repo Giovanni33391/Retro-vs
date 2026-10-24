@@ -97,6 +97,10 @@ function configureCanvasForGame(gameId) {
   masterCanvas.width = profile.width;
   masterCanvas.height = profile.totalCanvasHeight;
   masterCanvas.style.aspectRatio = `${profile.width} / ${profile.totalCanvasHeight}`;
+  const bezel = masterCanvas.closest('.screen-bezel');
+  if (bezel) {
+    bezel.style.aspectRatio = `${profile.width} / ${profile.totalCanvasHeight}`;
+  }
 
   offscreenCanvas.width = profile.width;
   offscreenCanvas.height = profile.height;
@@ -532,7 +536,9 @@ function setupUI() {
   btnAudio.addEventListener('click', () => {
     audio.unlock();
     const muted = audio.toggleMute();
-    btnAudio.textContent = muted ? '🔇 Sonido: Off' : '🔊 Sonido: On';
+    btnAudio.textContent = muted ? '🔇' : '🔊';
+    btnAudio.title = muted ? 'Sonido: Desactivado' : 'Sonido: Activado';
+    btnAudio.classList.toggle('active', !muted);
   });
 
   btnReset.addEventListener('click', () => {
