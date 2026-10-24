@@ -13,8 +13,8 @@ export class PodiumModal {
 
     const {
       isWinner,
-      playerName = 'Player 1',
-      rivalName = 'Rival',
+      playerName = 'MARIO [YOU]',
+      rivalName = 'MARIO [RIVAL / BOT]',
       playerTimeMs = 0,
       rivalTimeMs = 0,
       gameName = 'Super Mario Bros'
@@ -32,6 +32,7 @@ export class PodiumModal {
     const deltaSec = (deltaMs / 1000).toFixed(2);
     const deltaStr = (deltaMs > 0) ? `+${deltaSec}s` : `${deltaSec}s`;
     const deltaColor = isWinner ? '#38E45C' : '#FC5C5C';
+    const displayPlayerName = (playerName.includes('[YOU]') || playerName.includes('(TÚ)')) ? playerName : `${playerName} (TÚ)`;
 
     this.dialog.innerHTML = `
       <div class="podium-content">
@@ -44,7 +45,7 @@ export class PodiumModal {
         <div class="results-table">
           <div class="result-row ${isWinner ? 'winner-row' : ''}">
             <span class="r-place">${isWinner ? '🥇 1º' : '🥈 2º'}</span>
-            <span class="r-name">${playerName} (TÚ)</span>
+            <span class="r-name">${displayPlayerName}</span>
             <span class="r-time">${formatTime(playerTimeMs)}</span>
           </div>
           <div class="result-row ${!isWinner ? 'winner-row' : ''}">

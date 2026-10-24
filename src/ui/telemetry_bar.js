@@ -96,7 +96,7 @@ export class TelemetryBar {
     if (rivalTelem) {
       const rPct = Math.min(1.0, Math.max(0.0, rivalTelem.x / maxLen));
       const rPinX = trackX + Math.round(rPct * trackW);
-      ctx.fillStyle = profile.rivalColor || "#00A800";
+      ctx.fillStyle = profile.rivalColor || "#D82800";
       ctx.fillRect(rPinX - 2, trackY + 1, 4, 6);
       ctx.font = "5px monospace";
       ctx.fillStyle = "#FFFFFF";

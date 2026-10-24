@@ -89,10 +89,10 @@ export class MultiGhostRenderer {
     if (!this.spriteCache[key]) {
       if (gameId === GAME_IDS.SMW) {
         const palette = {
-          "1": [0x00, 0xA8, 0x00],
-          "2": [0xF0, 0xF0, 0xFF],
-          "3": [0xFC, 0x98, 0x38],
-          "4": [0xFC, 0xE4, 0x40]
+          "1": [0xFC, 0x28, 0x10], // Mario Red (#FC2810)
+          "2": [0x00, 0x40, 0xD8], // Mario Blue overalls (#0040D8)
+          "3": [0xFC, 0x98, 0x38], // Peach face (#FC9838)
+          "4": [0xFC, 0xE4, 0x40]  // Yellow buttons (#FCE440)
         };
         this.spriteCache[key] = this.createSprite(this.smwLuigiPattern, 16, 16, palette, facingLeft);
       } else if (gameId === GAME_IDS.SONIC1 || gameId === GAME_IDS.SONIC2 || gameId === GAME_IDS.SONIC3K) {
@@ -136,7 +136,7 @@ export class MultiGhostRenderer {
 
     if (onScreen) {
       ctx.save();
-      ctx.globalAlpha = 0.55; // 55% translucency
+      ctx.globalAlpha = 0.50; // 50% translucency
       const facingLeft = (remoteTelem.facing === 1);
       const sprite = this.getGhostSprite(gameId, remoteTelem.state, facingLeft);
       if (sprite) {
@@ -144,11 +144,11 @@ export class MultiGhostRenderer {
       }
       ctx.restore();
     } else {
-      this.renderOffscreenTracker(ctx, relX, distPx, relY, viewWidth, profile.rival);
+      this.renderOffscreenTracker(ctx, relX, distPx, relY, viewWidth, profile.rival || 'MARIO');
     }
   }
 
-  renderOffscreenTracker(ctx, relX, distPx, targetY, viewWidth = 256, rivalName = 'RIVAL') {
+  renderOffscreenTracker(ctx, relX, distPx, targetY, viewWidth = 256, rivalName = 'MARIO') {
     ctx.save();
     const clampedY = Math.max(30, Math.min(190, targetY || 100));
     const badgeW = 76;

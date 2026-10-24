@@ -1,18 +1,17 @@
-// ghost_renderer.js - Renders Luigi Ghost Sprite (50% translucent) and Off-screen Chevrons
+// ghost_renderer.js - Renders Mario Ghost Sprite (50% translucent) and Off-screen Chevrons
 
 export class GhostRenderer {
   constructor() {
-    // Generate small/super Luigi sprite canvases for crisp alpha-blended rendering
+    // Generate small/super Mario ghost sprite canvases for crisp alpha-blended rendering
     this.spriteCache = {};
     this.initSprites();
   }
 
   initSprites() {
-    // Authentic 16x16 / 16x32 pixel sprites for Luigi (Green cap/shirt, white overalls)
-    // Small Luigi (16x16)
+    // Authentic 16x16 pixel sprites for Mario Ghost
     // Palettes:
-    // Transparent = 0, Green = 1 (#00A800), White = 2 (#FFFFFF), Peach = 3 (#FCA044)
-    this.smallLuigiWalk1 = [
+    // Transparent = 0, Red = 1 (#D82800), Brown = 2 (#A81000), Peach = 3 (#FC9838)
+    this.smallMarioWalk1 = [
       "....11111.......",
       "...111111111....",
       "...2223323......",
@@ -31,7 +30,7 @@ export class GhostRenderer {
       "..1111...1111..."
     ];
 
-    this.smallLuigiJump = [
+    this.smallMarioJump = [
       "....11111.......",
       "...111111111....",
       "...2223323......",
@@ -50,7 +49,7 @@ export class GhostRenderer {
       "................"
     ];
 
-    this.smallLuigiSkid = [
+    this.smallMarioSkid = [
       "....11111.......",
       "...111111111....",
       "...2223323......",
@@ -68,6 +67,11 @@ export class GhostRenderer {
       ".1111...1111....",
       "................"
     ];
+
+    // Backward-compatibility aliases
+    this.smallLuigiWalk1 = this.smallMarioWalk1;
+    this.smallLuigiJump = this.smallMarioJump;
+    this.smallLuigiSkid = this.smallMarioSkid;
   }
 
   // Draw sprite onto an offscreen canvas
@@ -79,10 +83,11 @@ export class GhostRenderer {
     const imgData = ctx.createImageData(16, 16);
     const data = imgData.data;
 
+    // Classic NES SMB1 Mario Palette (Red cap/shirt, brown overalls, peach skin)
     const palette = {
-      "1": [0x00, 0xA8, 0x00, 255], // Green
-      "2": [0xFF, 0xFF, 0xFF, 255], // White
-      "3": [0xFC, 0x98, 0x38, 255]  // Peach
+      "1": [0xD8, 0x28, 0x00, 255], // Mario Red (#D82800)
+      "2": [0xA8, 0x10, 0x00, 255], // Mario Brown overalls (#A81000)
+      "3": [0xFC, 0x98, 0x38, 255]  // Peach face (#FC9838)
     };
 
     for (let y = 0; y < 16; y++) {
@@ -108,35 +113,35 @@ export class GhostRenderer {
   getGhostSprite(state, facingLeft) {
     const key = `${state}_${facingLeft ? 'L' : 'R'}`;
     if (!this.spriteCache[key]) {
-      let pattern = this.smallLuigiWalk1;
-      if (state === 2) pattern = this.smallLuigiJump;
-      if (state === 3) pattern = this.smallLuigiSkid;
+      let pattern = this.smallMarioWalk1;
+      if (state === 2) pattern = this.smallMarioJump;
+      if (state === 3) pattern = this.smallMarioSkid;
       this.spriteCache[key] = this.createSpriteCanvas(pattern, facingLeft);
     }
     return this.spriteCache[key];
   }
 
   // Render ghost runner onto viewport (ctx is 256x240 game viewport)
-  renderGhost(ctx, marioTelem, luigiTelem) {
-    if (!marioTelem || !luigiTelem) return;
+  renderGhost(ctx, marioTelem, rivalTelem) {
+    if (!marioTelem || !rivalTelem) return;
 
-    const relX = luigiTelem.x - marioTelem.cam_x;
-    const relY = luigiTelem.y;
-    const distPx = luigiTelem.x - marioTelem.x;
+    const relX = rivalTelem.x - marioTelem.cam_x;
+    const relY = rivalTelem.y;
+    const distPx = rivalTelem.x - marioTelem.x;
 
-    // Check if Luigi is within the camera viewport
+    // Check if Mario Rival is within the camera viewport
     const onScreen = (relX >= -16 && relX <= 256);
 
     if (onScreen) {
-      // Render translucent Luigi Ghost at exact coordinates
+      // Render translucent Mario Ghost at exact coordinates with 50% alpha
       ctx.save();
-      ctx.globalAlpha = 0.55; // 50-55% translucency for authentic ghost feel
-      const facingLeft = (luigiTelem.facing === 1);
-      const sprite = this.getGhostSprite(luigiTelem.state, facingLeft);
+      ctx.globalAlpha = 0.50; // Authentic 50% translucency
+      const facingLeft = (rivalTelem.facing === 1);
+      const sprite = this.getGhostSprite(rivalTelem.state, facingLeft);
       ctx.drawImage(sprite, Math.round(relX), Math.round(relY));
       ctx.restore();
     } else {
-      // Luigi is off-screen: Render Directional Chevron / Tracker Badge
+      // Mario Rival is off-screen: Render Directional Chevron / Tracker Badge
       this.renderOffscreenTracker(ctx, relX, distPx, relY);
     }
   }
@@ -144,37 +149,37 @@ export class GhostRenderer {
   renderOffscreenTracker(ctx, relX, distPx, targetY) {
     ctx.save();
     const clampedY = Math.max(30, Math.min(210, targetY || 120));
+    const badgeW = 76;
+    const badgeH = 16;
 
     if (relX > 256) {
-      // Luigi is ahead (to the right)
-      const badgeX = 186;
-      const badgeY = clampedY;
-      const text = `[L] ▶ +${distPx}px`;
+      // Mario Rival is ahead (to the right)
+      const badgeX = 256 - badgeW - 8;
+      const text = `[MARIO] ▶ +${distPx}px`;
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-      ctx.fillRect(badgeX - 4, badgeY - 8, 70, 16);
+      ctx.fillRect(badgeX - 4, clampedY - 8, badgeW, badgeH);
       ctx.strokeStyle = "#FCA044";
       ctx.lineWidth = 1;
-      ctx.strokeRect(badgeX - 4, badgeY - 8, 70, 16);
+      ctx.strokeRect(badgeX - 4, clampedY - 8, badgeW, badgeH);
 
       ctx.font = "8px monospace";
       ctx.fillStyle = "#FCA044";
-      ctx.fillText(text, badgeX, badgeY + 4);
+      ctx.fillText(text, badgeX, clampedY + 4);
     } else if (relX < -16) {
-      // Luigi is behind (to the left)
+      // Mario Rival is behind (to the left)
       const badgeX = 8;
-      const badgeY = clampedY;
-      const text = `◀ [L] ${distPx}px`;
+      const text = `◀ [MARIO] ${distPx}px`;
 
       ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
-      ctx.fillRect(badgeX - 4, badgeY - 8, 70, 16);
+      ctx.fillRect(badgeX - 4, clampedY - 8, badgeW, badgeH);
       ctx.strokeStyle = "#5C94FC";
       ctx.lineWidth = 1;
-      ctx.strokeRect(badgeX - 4, badgeY - 8, 70, 16);
+      ctx.strokeRect(badgeX - 4, clampedY - 8, badgeW, badgeH);
 
       ctx.font = "8px monospace";
       ctx.fillStyle = "#5C94FC";
-      ctx.fillText(text, badgeX, badgeY + 4);
+      ctx.fillText(text, badgeX, clampedY + 4);
     }
 
     ctx.restore();

@@ -96,10 +96,10 @@ function configureCanvasForGame(gameId) {
   const profile = getGameProfile(gameId);
   masterCanvas.width = profile.width;
   masterCanvas.height = profile.totalCanvasHeight;
-  masterCanvas.style.aspectRatio = `${profile.width} / ${profile.totalCanvasHeight}`;
+  masterCanvas.style.aspectRatio = '4 / 3';
   const bezel = masterCanvas.closest('.screen-bezel');
   if (bezel) {
-    bezel.style.aspectRatio = `${profile.width} / ${profile.totalCanvasHeight}`;
+    bezel.style.aspectRatio = '4 / 3';
   }
 
   offscreenCanvas.width = profile.width;
@@ -310,10 +310,16 @@ function checkRaceConclusion() {
     const profile = getGameProfile(state.gameId);
     const isWinner = (!state.rivalFinished || state.playerFinishTimeMs <= state.rivalFinishTimeMs);
 
+    const isMarioGame = (state.gameId === GAME_IDS.SMB1 || state.gameId === GAME_IDS.SMW);
+    const playerName = isMarioGame ? 'MARIO [YOU]' : `${profile.hero || 'Player 1'}`;
+    const rivalName = isMarioGame
+      ? (state.mode === 'BOT' ? 'MARIO [BOT]' : 'MARIO [RIVAL]')
+      : ((state.mode === 'BOT') ? profile.rival : 'Rival Online');
+
     podiumModal.show({
       isWinner,
-      playerName: 'Player 1',
-      rivalName: (state.mode === 'BOT') ? profile.rival : 'Rival Online',
+      playerName,
+      rivalName,
       playerTimeMs: state.playerFinishTimeMs,
       rivalTimeMs: state.rivalFinishTimeMs,
       gameName: profile.name
@@ -491,7 +497,11 @@ function setupUI() {
       updateChallengeUI();
     } else {
       webrtc.disconnect();
-      updateNetStatus(`Modo: ${mode === 'BOT' ? 'Práctica vs Bot' : 'Solo Trial'}`);
+      const isMarioGame = (state.gameId === GAME_IDS.SMB1 || state.gameId === GAME_IDS.SMW);
+      const modeText = mode === 'BOT'
+        ? (isMarioGame ? 'MARIO [YOU] vs MARIO [BOT] • Práctica' : 'Práctica vs Bot')
+        : (isMarioGame ? 'MARIO [YOU] • Solo Time Trial' : 'Solo Trial');
+      updateNetStatus(`Modo: ${modeText}`);
     }
   }
 

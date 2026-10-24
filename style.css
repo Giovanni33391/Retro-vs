@@ -37,8 +37,8 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
-  gap: 6px;
+  padding: 4px 8px;
+  gap: 4px;
 }
 
 /* ========================================================================= */
@@ -46,7 +46,7 @@ html, body {
 /* ========================================================================= */
 .arcade-navbar {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -419,7 +419,7 @@ html, body {
   min-height: 0;
   min-width: 0;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -442,7 +442,7 @@ html, body {
 }
 
 .screen-bezel {
-  aspect-ratio: 256 / 280;
+  aspect-ratio: 4 / 3;
   max-width: 100%;
   max-height: 100%;
   box-sizing: border-box;
@@ -458,15 +458,15 @@ html, body {
 }
 
 /* Landscape / Desktop: Viewport height is the primary constraint */
-@media (min-aspect-ratio: 1/1) {
+@media (min-aspect-ratio: 4/3) {
   .screen-bezel {
     height: 100%;
     width: auto;
   }
 }
 
-/* Portrait / Mobile: Viewport width is the primary constraint */
-@media (max-aspect-ratio: 1/1) {
+/* Portrait / Narrow: Viewport width is the primary constraint */
+@media (max-aspect-ratio: 4/3) {
   .screen-bezel {
     width: 100%;
     height: auto;
@@ -478,7 +478,7 @@ html, body {
   height: 100%;
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain;
+  object-fit: fill;
   display: block;
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
@@ -571,10 +571,11 @@ html, body {
   width: 100%;
   max-width: 520px;
   margin-top: 4px;
+  flex-shrink: 0;
 }
 
-/* Auto-show on coarse pointer devices (mobiles/touchscreens) or small displays */
-@media (pointer: coarse), (max-width: 640px) {
+/* Auto-show on coarse pointer devices without fine mouse (mobiles/tablets) */
+@media (pointer: coarse) and (hover: none) {
   .touch-container {
     display: block;
   }
@@ -691,7 +692,7 @@ html, body {
 .arcade-footer {
   text-align: center;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
