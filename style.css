@@ -6,7 +6,7 @@
   --border-glass: rgba(255, 255, 255, 0.08);
   --gold: #fca044;
   --mario-red: #fc3800;
-  --luigi-green: #00a800;
+  --mario-rival: #d82800;
   --sonic-blue: #0070ec;
   --accent-cyan: #5c94fc;
   --text-main: #f0f2f8;
@@ -938,7 +938,6 @@ kbd {
     min-width: 26px;
   }
   .touch-container {
-    display: block !important;
     width: 100%;
     max-width: 440px;
     flex-shrink: 0;

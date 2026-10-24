@@ -1,5 +1,5 @@
 // multi_ghost_renderer.js - Multi-System Ghost Runner Renderer
-// Renders 50% translucent ghosts for Luigi (SMB1 & SMW) and Tails/Sonic (Genesis)
+// Renders 50% translucent ghosts for Mario (SMB1 & SMW) and Tails/Sonic (Genesis)
 import { GAME_IDS, getGameProfile } from '../profiles/game_profiles.js';
 import { GhostRenderer as Smb1GhostRenderer } from './ghost_renderer.js';
 
@@ -11,15 +11,15 @@ export class MultiGhostRenderer {
   }
 
   initSprites() {
-    // 16x16 Super Mario World Luigi Sprite
-    // Palette: 0=transp, 1=green (#00A800), 2=white/purple (#F0F0FF), 3=peach (#FCA044), 4=yellow cape (#FCE440)
-    this.smwLuigiPattern = [
+    // 16x16 Super Mario World Mario Sprite
+    // Palette: 0=transp, 1=Mario Red (#FC2810), 2=Blue Overalls (#0040D8), 3=Peach Skin (#FC9838), 4=Brown Hair/Mustache/Shoes (#603010), 5=Yellow Buttons (#FCE440)
+    this.smwMarioPattern = [
       "....11111.......",
       "...111111111....",
-      "...2223323444...",
-      "..232333234444..",
-      "..23223332344...",
-      "..2233332222....",
+      "...4443343......",
+      "..4343334333....",
+      "..43443334333...",
+      "..4433334444....",
       "....3333333.....",
       "...112111.......",
       "..1112112111....",
@@ -28,9 +28,10 @@ export class MultiGhostRenderer {
       ".333.2222.333...",
       ".333222222333...",
       "....222.222.....",
-      "...111...111....",
-      "..1111...1111..."
+      "...444...444....",
+      "..4444...4444..."
     ];
+    this.smwLuigiPattern = this.smwMarioPattern;
 
     // 24x24 Sega Genesis Tails Sprite
     // Palette: 0=transp, 1=orange (#FCA000), 2=white (#FFFFFF), 3=red shoes (#E42020), 4=black (#000000)
@@ -92,9 +93,10 @@ export class MultiGhostRenderer {
           "1": [0xFC, 0x28, 0x10], // Mario Red (#FC2810)
           "2": [0x00, 0x40, 0xD8], // Mario Blue overalls (#0040D8)
           "3": [0xFC, 0x98, 0x38], // Peach face (#FC9838)
-          "4": [0xFC, 0xE4, 0x40]  // Yellow buttons (#FCE440)
+          "4": [0x60, 0x30, 0x10], // Brown hair, mustache, shoes (#603010)
+          "5": [0xFC, 0xE4, 0x40]  // Yellow buttons (#FCE440)
         };
-        this.spriteCache[key] = this.createSprite(this.smwLuigiPattern, 16, 16, palette, facingLeft);
+        this.spriteCache[key] = this.createSprite(this.smwMarioPattern, 16, 16, palette, facingLeft);
       } else if (gameId === GAME_IDS.SONIC1 || gameId === GAME_IDS.SONIC2 || gameId === GAME_IDS.SONIC3K) {
         const palette = {
           "1": [0xFC, 0xA0, 0x00], // Orange

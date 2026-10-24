@@ -5,8 +5,8 @@ A high-performance HTML5 / Canvas NES speedrun racing game designed for low-late
 ## Features
 
 - **Exclusive Ghost Runner Layout**: Native 256x280 resolution (256x40 top telemetry & timer HUD + 256x240 authentic NES viewport). Scaled pixel-perfect with integer aspect-ratio.
-- **Translucent Ghost Rival**: Luigi runs in the same frame as a 50% opacity translucent ghost with authentic NES green/white palettes.
-- **Off-Screen Directional Tracking**: Dynamic retro badges (`[L] ▶ +X px` or `◀ [L] -X px`) indicate the rival's relative distance whenever they leave the visible camera screen.
+- **Translucent Ghost Rival**: Mario rival runs in the same frame as a 50% opacity translucent ghost with authentic NES red/brown palettes.
+- **Off-Screen Directional Tracking**: Dynamic retro badges (`[MARIO] ▶ +X px` or `◀ [MARIO] -X px`) indicate the rival's relative distance whenever they leave the visible camera screen.
 - **WebRTC DataChannel P2P Multiplayer**: Lag-free, serverless 60Hz telemetry synchronization with PeerJS signaling (`/?room=1234` or direct room codes).
 - **Autonomous Speedrun Bot**: Reactive AI player for offline practice across World 1-1 through 1-4, handling pit jumps, platform timing, and Bowser's bridge axe.
 - **Full NES 6502 + PPU + APU Emulation**: 60 FPS gameplay with authentic 8-bit sound effects and music.

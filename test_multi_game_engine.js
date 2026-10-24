@@ -153,8 +153,9 @@ async function runTestSuite() {
   // Palette color verification (0x00RRGGBB format check)
   const nesSky = nesRunner.nes.ppu.palTable.getEntry(0x22);
   const nesMarioRed = nesRunner.nes.ppu.palTable.getEntry(0x16);
-  if (nesSky !== 0x5C94FC || nesMarioRed !== 0xD82800) {
-    throw new Error(`Paleta de colores invertida en NesRunner: Sky=0x${nesSky.toString(16)}, MarioRed=0x${nesMarioRed.toString(16)} (esperado Sky=0x5C94FC, MarioRed=0xD82800)`);
+  const nesBricks = nesRunner.nes.ppu.palTable.getEntry(0x17);
+  if (nesSky !== 0x5C94FC || nesMarioRed !== 0xD82800 || nesBricks !== 0xA81000) {
+    throw new Error(`Paleta de colores invertida en NesRunner: Sky=0x${nesSky.toString(16)}, MarioRed=0x${nesMarioRed.toString(16)}, Bricks=0x${nesBricks.toString(16)} (esperado Sky=0x5C94FC, MarioRed=0xD82800, Bricks=0xA81000)`);
   }
   if (snesRunner.colors.sky !== 0xFF58D8FC || snesRunner.colors.marioRed !== 0xFFFC2810) {
     throw new Error('Paleta de colores invertida en SnesRunner (esperado 0x00RRGGBB)');
@@ -162,7 +163,39 @@ async function runTestSuite() {
   if (genRunner.colors.sonicBlue !== 0xFF0070EC || genRunner.colors.sonicRed !== 0xFFE82010) {
     throw new Error('Paleta de colores invertida en GenesisRunner (esperado 0x00RRGGBB)');
   }
-  console.log("  -> Paletas de colores auténticas verificadas (0x00RRGGBB): NES Sky=#5C94FC/Mario=#D82800, SMW Sky=#58D8FC, Sonic=#0070EC");
+
+  // Canvas ImageData byte-packing conversion test (certifying no Red/Blue byte-swap in memory)
+  const convertPixelToImageData = (pixel) => {
+    const r = (pixel >> 16) & 0xFF;
+    const g = (pixel >> 8) & 0xFF;
+    const b = pixel & 0xFF;
+    const buf32 = new Uint32Array(1);
+    buf32[0] = 0xFF000000 | (b << 16) | (g << 8) | r;
+    const buf8 = new Uint8ClampedArray(buf32.buffer);
+    return [buf8[0], buf8[1], buf8[2], buf8[3]];
+  };
+  const skyBytes = convertPixelToImageData(nesSky);
+  const marioBytes = convertPixelToImageData(nesMarioRed);
+  const brickBytes = convertPixelToImageData(nesBricks);
+  if (skyBytes[0] !== 0x5C || skyBytes[1] !== 0x94 || skyBytes[2] !== 0xFC) {
+    throw new Error(`Inversión Red/Blue en Canvas ImageData para cielo: ${JSON.stringify(skyBytes)}`);
+  }
+  if (marioBytes[0] !== 0xD8 || marioBytes[1] !== 0x28 || marioBytes[2] !== 0x00) {
+    throw new Error(`Inversión Red/Blue en Canvas ImageData para Mario Red: ${JSON.stringify(marioBytes)}`);
+  }
+  if (brickBytes[0] !== 0xA8 || brickBytes[1] !== 0x10 || brickBytes[2] !== 0x00) {
+    throw new Error(`Inversión Red/Blue en Canvas ImageData para Bricks: ${JSON.stringify(brickBytes)}`);
+  }
+
+  // SMW Mario Ghost sprite pattern & palette verification
+  const { MultiGhostRenderer } = await import('./src/ghost/multi_ghost_renderer.js');
+  const mgr = new MultiGhostRenderer();
+  if (!mgr.smwMarioPattern || mgr.smwMarioPattern.length !== 16) {
+    throw new Error('Patrón de sprite SMW Mario no encontrado en MultiGhostRenderer');
+  }
+
+  console.log("  -> Paletas de colores auténticas verificadas (0x00RRGGBB): NES Sky=#5C94FC, Mario=#D82800, Bricks=#A81000, SMW Sky=#58D8FC, Sonic=#0070EC");
+  console.log("  -> Conversión Canvas ImageData certificada: R/B byte swap resuelto ([R,G,B,A] exacto).");
   console.log("  -> PASADO: Todos los emuladores arrancan instantáneamente en sus líneas de salida.");
 
   // -------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-// ghost_bot.js - Autonomous Speedrun Bot for NES Super Mario Bros (Luigi Ghost Rival)
+// ghost_bot.js - Autonomous Speedrun Bot for NES Super Mario Bros (Mario Ghost Rival)
 // Direct port of the proven desktop speedrun heuristics from emu_race_engine.py
 // Capable of flawlessly navigating World 1-1, 1-2, 1-3, and 1-4.
 

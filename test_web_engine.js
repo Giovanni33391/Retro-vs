@@ -52,20 +52,20 @@ async function runWebTests() {
   marioRunner.buttonUp(1, 7);
   console.log("  -> PASADO: Mapeo de controlador P1 sin errores (0 y 1 normalizados a Controller 1).");
 
-  // 4. Verificación de Bot Autónomo de Luigi (World 1-1 completo hasta bandera)
-  console.log("\n[TEST 4] Carrera autónoma completa del Bot Luigi en World 1-1...");
-  const luigiRunner = new NesRunner({ isMuted: true });
-  luigiRunner.loadRom(romBinary);
-  luigiRunner.fastBoot();
+  // 4. Verificación de Bot Autónomo de Mario Rival (World 1-1 completo hasta bandera)
+  console.log("\n[TEST 4] Carrera autónoma completa del Bot Mario Rival en World 1-1...");
+  const rivalMarioRunner = new NesRunner({ isMuted: true });
+  rivalMarioRunner.loadRom(romBinary);
+  rivalMarioRunner.fastBoot();
   const bot = new GhostBot();
 
   let max_x = 40;
   let reachedFlagpole = false;
 
   for (let f = 0; f < 1500; f++) {
-    bot.update(luigiRunner);
-    luigiRunner.frame();
-    const cur_x = luigiRunner.mem[0x006D] * 256 + luigiRunner.mem[0x0086];
+    bot.update(rivalMarioRunner);
+    rivalMarioRunner.frame();
+    const cur_x = rivalMarioRunner.mem[0x006D] * 256 + rivalMarioRunner.mem[0x0086];
     if (cur_x > max_x) max_x = cur_x;
 
     if (cur_x >= 3160) {
@@ -74,15 +74,15 @@ async function runWebTests() {
       break;
     }
 
-    if (luigiRunner.mem[0x000E] === 11) {
-      throw new Error(`El Bot Luigi murió en frame ${f} en X=${cur_x}!`);
+    if (rivalMarioRunner.mem[0x000E] === 11) {
+      throw new Error(`El Bot Mario Rival murió en frame ${f} en X=${cur_x}!`);
     }
   }
 
   if (!reachedFlagpole) {
-    throw new Error(`El Bot Luigi no completó World 1-1 (max_x = ${max_x})`);
+    throw new Error(`El Bot Mario Rival no completó World 1-1 (max_x = ${max_x})`);
   }
-  console.log("  -> PASADO: Bot Luigi superó todos los fosos y enemigos de World 1-1 con 0 muertes.");
+  console.log("  -> PASADO: Bot Mario Rival superó todos los fosos y enemigos de World 1-1 con 0 muertes.");
 
   // 5. Verificación de WebRtcSync: generación de paquetes e interpolación
   console.log("\n[TEST 5] WebRtcSync: serialización de telemetría e interpolación...");
