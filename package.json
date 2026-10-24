@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node test_multi_game_engine.js"
+    "test": "node test_multi_game_engine.js && node test_fightcade_ui.js"
   },
   "dependencies": {
     "jsnes": "^2.1.0",

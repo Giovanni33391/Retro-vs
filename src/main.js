@@ -1,4 +1,4 @@
-// main.js - Master Game Loop & UI Orchestrator for Multi-Game Retro Speedrun VS
+// main.js - Master Game Loop & UI Orchestrator for Fightcade-Style Retro Speedrun VS
 import { NesAudio } from './nes/nes_audio.js';
 import { GAME_IDS, getGameProfile, detectGameFromFileName } from './profiles/game_profiles.js';
 import { romCache } from './cache/rom_cache.js';
@@ -8,9 +8,10 @@ import { MultiGhostRenderer } from './ghost/multi_ghost_renderer.js';
 import { TelemetryBar } from './ui/telemetry_bar.js';
 import { WebRtcSync, CHALLENGE_STATES } from './net/webrtc_sync.js';
 import { TouchControls } from './ui/touch_controls.js';
-import { GameSelector } from './ui/game_selector.js';
 import { RomCacheUI } from './ui/rom_cache_ui.js';
 import { PodiumModal } from './ui/podium_modal.js';
+import { FightcadeLobby } from './ui/fightcade_lobby.js';
+import { fcSound } from './ui/fightcade_sound.js';
 
 // Application State
 const state = {
@@ -47,7 +48,7 @@ const telemetryBar = new TelemetryBar(256, 40);
 let remoteGhostTelemetry = null;
 
 // UI Components
-let gameSelector = null;
+let fcLobby = null;
 let romCacheUI = null;
 let touchControls = null;
 let podiumModal = null;
@@ -56,6 +57,9 @@ let podiumModal = null;
 const webrtc = new WebRtcSync({
   onConnected: (roomCode) => {
     updateNetStatus(`ONLINE: Sala ${roomCode} Conectada! (Ping: ${webrtc.pingMs}ms)`, true);
+    if (fcLobby) {
+      fcLobby.sendUserChatMessage(`¡Conectado a la sala ${roomCode}! Preparando partida...`);
+    }
     updateChallengeUI();
   },
   onDisconnected: () => {
@@ -111,6 +115,30 @@ function configureCanvasForGame(gameId) {
   if (touchControls) {
     touchControls.setSystem(profile.system);
   }
+
+  updateArenaHeaders();
+}
+
+function updateArenaHeaders() {
+  const modeTag = document.getElementById('arenaModeTag');
+  const rivalTag = document.getElementById('arenaRivalTag');
+  const profile = getGameProfile(state.gameId);
+
+  const isMarioGame = (state.gameId === GAME_IDS.SMB1 || state.gameId === GAME_IDS.SMW);
+
+  if (modeTag) {
+    modeTag.textContent = state.mode === 'ONLINE' ? '1v1 P2P SPEEDRUN' : (state.mode === 'BOT' ? 'PRÁCTICA BOT' : 'CONTRARRELOJ');
+  }
+
+  if (rivalTag) {
+    if (isMarioGame) {
+      const rivalName = state.mode === 'ONLINE' ? 'MARIO [FANTASMA RIVAL]' : (state.mode === 'BOT' ? 'MARIO [FANTASMA BOT]' : 'NINGUNO (SOLO)');
+      rivalTag.textContent = `MARIO [TÚ] vs ${rivalName}`;
+    } else {
+      const rivalName = state.mode === 'ONLINE' ? `${profile.rival} [RIVAL]` : (state.mode === 'BOT' ? `${profile.rival} [BOT]` : 'SOLO');
+      rivalTag.textContent = `${profile.hero} [TÚ] vs ${rivalName}`;
+    }
+  }
 }
 
 // Switch Active Game
@@ -122,15 +150,8 @@ async function switchGame(newGameId) {
   bot.setGame(newGameId);
   configureCanvasForGame(newGameId);
 
-  if (gameSelector) gameSelector.setActiveGame(newGameId);
+  if (fcLobby) fcLobby.setActiveGame(newGameId);
   if (romCacheUI) await romCacheUI.setGame(newGameId);
-
-  // Update game title badge in header
-  const profile = getGameProfile(newGameId);
-  const titleEl = document.querySelector('.game-title');
-  const badgeEl = document.querySelector('.title-badge');
-  if (titleEl) titleEl.textContent = profile.name.toUpperCase();
-  if (badgeEl) badgeEl.textContent = profile.systemBadge;
 
   // Update share link and notify peer if in room
   if (webrtc.roomCode) {
@@ -161,6 +182,7 @@ async function loadRomForGame(gameId) {
       state.romData = cached.data;
       initRunners();
       setTimeout(() => overlay.classList.add('hidden'), 100);
+      await refreshCachedPills();
       return;
     }
 
@@ -189,9 +211,9 @@ async function loadRomForGame(gameId) {
 
     // No ROM in cache or default
     statusEl.innerHTML = `
-      <div style="color: #ffaa44; margin-bottom: 10px;">ROM no encontrada en caché para ${profile.name}</div>
-      <p style="font-size: 11px; color: #aaa; margin-bottom: 12px;">Arrastra tu ROM (${profile.extensions.join(', ')}) o selecciona el archivo:</p>
-      <label class="btn file-btn">
+      <div style="color: #fca044; margin-bottom: 10px; font-weight: bold;">ROM no encontrada en caché para ${profile.name}</div>
+      <p style="font-size: 12px; color: #aaa; margin-bottom: 12px;">Arrastra tu archivo (${profile.extensions.join(', ')}) o selecciónalo:</p>
+      <label class="btn btn-primary" style="display:inline-block; cursor:pointer;">
         📂 Seleccionar Archivo ROM
         <input type="file" id="modalFilePicker" accept="${profile.extensions.join(',')}" style="display:none;">
       </label>
@@ -223,7 +245,7 @@ async function loadRomForGame(gameId) {
 async function refreshCachedPills() {
   const cached = await romCache.listRoms();
   const cachedIds = cached.map(c => c.gameId);
-  if (gameSelector) gameSelector.setCachedGames(cachedIds);
+  if (fcLobby) fcLobby.setCachedGames(cachedIds);
 }
 
 // Initialize Players and Practice Bot
@@ -257,7 +279,6 @@ function initRunners() {
 function handleChallengeStateChange(challengeState, details) {
   const readyBtn = document.getElementById('readyMatchBtn');
   const modalStatus = document.getElementById('challengeModalStatus');
-  const countOverlay = document.getElementById('countdownOverlay');
 
   if (modalStatus) {
     modalStatus.textContent = `Estado: ${challengeState}`;
@@ -279,6 +300,7 @@ function handleChallengeStateChange(challengeState, details) {
   } else if (challengeState === CHALLENGE_STATES.COUNTDOWN) {
     const roomModal = document.getElementById('roomModal');
     if (roomModal && typeof roomModal.close === 'function') roomModal.close();
+    if (fcLobby) fcLobby.switchView('arena');
     if (playerRunner) playerRunner.reset();
     if (rivalBotRunner) rivalBotRunner.reset();
   } else if (challengeState === CHALLENGE_STATES.RACING) {
@@ -303,6 +325,34 @@ function showCountdownOverlay(val) {
     countNum.textContent = val;
     countNum.className = (val === '¡GO!') ? 'countdown-go' : 'countdown-tick';
   }
+  if (val === '¡GO!') {
+    fcSound.playCountdownGo();
+  } else {
+    fcSound.playCountdownTick();
+  }
+}
+
+function startPracticeCountdown() {
+  resetRace();
+  fcLobby.switchView('arena');
+  let step = 3;
+  showCountdownOverlay(step);
+
+  const timer = setInterval(() => {
+    step--;
+    if (step > 0) {
+      showCountdownOverlay(step);
+    } else if (step === 0) {
+      showCountdownOverlay('¡GO!');
+    } else {
+      clearInterval(timer);
+      const countOverlay = document.getElementById('countdownOverlay');
+      if (countOverlay) countOverlay.classList.remove('active');
+      state.raceStartTime = performance.now();
+      state.elapsedTimeMs = 0;
+      state.hasStartedRace = true;
+    }
+  }, 900);
 }
 
 function checkRaceConclusion() {
@@ -311,10 +361,17 @@ function checkRaceConclusion() {
     const isWinner = (!state.rivalFinished || state.playerFinishTimeMs <= state.rivalFinishTimeMs);
 
     const isMarioGame = (state.gameId === GAME_IDS.SMB1 || state.gameId === GAME_IDS.SMW);
-    const playerName = isMarioGame ? 'MARIO [YOU]' : `${profile.hero || 'Player 1'}`;
+    const playerName = isMarioGame ? 'MARIO [TÚ]' : `${profile.hero || 'Player 1'}`;
     const rivalName = isMarioGame
       ? (state.mode === 'BOT' ? 'MARIO [BOT]' : 'MARIO [RIVAL]')
       : ((state.mode === 'BOT') ? profile.rival : 'Rival Online');
+
+    const formattedTime = (state.playerFinishTimeMs / 1000).toFixed(2);
+    if (fcLobby) {
+      const winnerName = isWinner ? playerName : rivalName;
+      const loserName = isWinner ? rivalName : playerName;
+      fcLobby.addMatchResult(winnerName, loserName, `${formattedTime}s`);
+    }
 
     podiumModal.show({
       isWinner,
@@ -375,7 +432,7 @@ function gameLoop(timestamp) {
   }
 
   // Timer update
-  if (!state.playerFinished) {
+  if (!state.playerFinished && state.hasStartedRace) {
     state.elapsedTimeMs = Math.round(performance.now() - state.raceStartTime);
   }
 
@@ -391,7 +448,7 @@ function gameLoop(timestamp) {
   const pixelCount = profile.width * profile.height;
   for (let i = 0; i < pixelCount; i++) {
     const pixel = fb[i];
-    // Convert 0x00RRGGBB / ARGB to Little-Endian 0xAABBGGRR
+    // Convert 0x00RRGGBB to Little-Endian 0xAABBGGRR
     const r = (pixel >> 16) & 0xFF;
     const g = (pixel >> 8) & 0xFF;
     const b = pixel & 0xFF;
@@ -414,15 +471,16 @@ const keyMap = {
   'ArrowDown': 5, 'KeyS': 5,
   'ArrowLeft': 6, 'KeyA': 6,
   'ArrowRight': 7, 'KeyD': 7,
-  'KeyZ': 1, 'KeyJ': 1, // B / Y
-  'KeyX': 0, 'KeyK': 0, // A / B
-  'KeyC': 2, 'KeyL': 2, // Genesis C / Select
+  'KeyZ': 1, 'KeyJ': 1, // B / Y / Turbo
+  'KeyX': 0, 'KeyK': 0, // A / Jump
+  'KeyC': 2, 'KeyL': 2, // Genesis C / Spin / Select
   'Enter': 3,            // Start
   'ShiftRight': 2, 'ShiftLeft': 2 // Select
 };
 
 window.addEventListener('keydown', (e) => {
   audio.unlock();
+  fcSound.init();
   if (state.mode === 'ONLINE' && webrtc.challengeState === CHALLENGE_STATES.COUNTDOWN) {
     return;
   }
@@ -443,20 +501,52 @@ window.addEventListener('keyup', (e) => {
 
 // Setup UI Controls & Mode Listeners
 function setupUI() {
-  const btnBot = document.getElementById('modeBotBtn');
-  const btnOnline = document.getElementById('modeOnlineBtn');
-  const btnSolo = document.getElementById('modeSoloBtn');
   const roomModal = document.getElementById('roomModal');
   const btnAudio = document.getElementById('audioToggleBtn');
   const btnReset = document.getElementById('resetGameBtn');
 
-  // Game Selector Bar
-  const selectorContainer = document.getElementById('gameSelectorBar');
-  gameSelector = new GameSelector(selectorContainer, async (selectedGameId) => {
-    await switchGame(selectedGameId);
+  // Initialize Fightcade Lobby Component
+  fcLobby = new FightcadeLobby({
+    initialGameId: state.gameId,
+    onGameSelected: async (selectedGameId) => {
+      await switchGame(selectedGameId);
+    },
+    onStartPractice: (practiceMode) => {
+      state.mode = practiceMode;
+      updateArenaHeaders();
+      startPracticeCountdown();
+    },
+    onCreateP2PRoom: () => {
+      state.mode = 'ONLINE';
+      updateArenaHeaders();
+      const code = webrtc.createRoom(null, state.gameId);
+      document.getElementById('currentRoomCode').textContent = code;
+      document.getElementById('roomShareLink').value = `${window.location.origin}/?room=${code}&game=${state.gameId}`;
+      document.getElementById('roomCreatedSection').classList.remove('hidden');
+      roomModal.showModal();
+      updateChallengeUI();
+    },
+    onChallengePlayer: (player) => {
+      state.mode = 'BOT';
+      updateArenaHeaders();
+      startPracticeCountdown();
+    },
+    onViewChanged: (viewName) => {
+      if (viewName === 'arena') {
+        configureCanvasForGame(state.gameId);
+      }
+    },
+    onOpenRomCache: () => {
+      const subDrawer = document.getElementById('subBarDrawer');
+      const btnRom = document.getElementById('romToggleBtn');
+      if (subDrawer) {
+        subDrawer.classList.toggle('open');
+        if (btnRom) btnRom.classList.toggle('active', subDrawer.classList.contains('open'));
+      }
+    }
   });
 
-  // ROM Cache UI
+  // ROM Cache UI in Drawer
   const cacheContainer = document.getElementById('romCacheBar');
   romCacheUI = new RomCacheUI(cacheContainer, {
     gameId: state.gameId,
@@ -477,37 +567,14 @@ function setupUI() {
       if (state.mode === 'ONLINE') {
         webrtc.requestRematch();
       } else {
-        resetRace();
+        startPracticeCountdown();
       }
     },
     onClose: () => {
       resetRace();
+      fcLobby.switchView('lobby');
     }
   });
-
-  function setMode(mode) {
-    state.mode = mode;
-    [btnBot, btnOnline, btnSolo].forEach(b => b.classList.remove('active'));
-    if (mode === 'BOT') btnBot.classList.add('active');
-    if (mode === 'ONLINE') btnOnline.classList.add('active');
-    if (mode === 'SOLO') btnSolo.classList.add('active');
-
-    if (mode === 'ONLINE') {
-      roomModal.showModal();
-      updateChallengeUI();
-    } else {
-      webrtc.disconnect();
-      const isMarioGame = (state.gameId === GAME_IDS.SMB1 || state.gameId === GAME_IDS.SMW);
-      const modeText = mode === 'BOT'
-        ? (isMarioGame ? 'MARIO [YOU] vs MARIO [BOT] • Práctica' : 'Práctica vs Bot')
-        : (isMarioGame ? 'MARIO [YOU] • Solo Time Trial' : 'Solo Trial');
-      updateNetStatus(`Modo: ${modeText}`);
-    }
-  }
-
-  btnBot.addEventListener('click', () => setMode('BOT'));
-  btnOnline.addEventListener('click', () => setMode('ONLINE'));
-  btnSolo.addEventListener('click', () => setMode('SOLO'));
 
   // Room Matchmaking Handlers
   document.getElementById('createRoomBtn').addEventListener('click', () => {
@@ -545,14 +612,16 @@ function setupUI() {
 
   btnAudio.addEventListener('click', () => {
     audio.unlock();
+    fcSound.init();
     const muted = audio.toggleMute();
+    fcSound.toggleMute();
     btnAudio.textContent = muted ? '🔇' : '🔊';
     btnAudio.title = muted ? 'Sonido: Desactivado' : 'Sonido: Activado';
     btnAudio.classList.toggle('active', !muted);
   });
 
   btnReset.addEventListener('click', () => {
-    resetRace();
+    startPracticeCountdown();
   });
 
   // Toggle ROM Status Drawer
@@ -597,6 +666,7 @@ function setupUI() {
 
   touchControls = new TouchControls(touchContainer, (btnIndex, isPressed) => {
     audio.unlock();
+    fcSound.init();
     if (state.mode === 'ONLINE' && webrtc.challengeState === CHALLENGE_STATES.COUNTDOWN) {
       return;
     }
@@ -608,6 +678,43 @@ function setupUI() {
     }
   }, getGameProfile(state.gameId).system);
 
+  // Drag and Drop ROM onto whole window
+  const dragOverlay = document.getElementById('dragDropOverlay');
+  window.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    if (dragOverlay) dragOverlay.classList.add('active');
+  });
+
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener('dragleave', (e) => {
+    if (e.relatedTarget === null && dragOverlay) {
+      dragOverlay.classList.remove('active');
+    }
+  });
+
+  window.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    if (dragOverlay) dragOverlay.classList.remove('active');
+
+    if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      const upload = await romCache.handleFileUpload(file);
+      if (upload.gameId !== state.gameId) {
+        await switchGame(upload.gameId);
+      } else {
+        state.romData = upload.record.data;
+        initRunners();
+        if (romCacheUI) await romCacheUI.refresh();
+        await refreshCachedPills();
+        const loading = document.getElementById('loadingOverlay');
+        if (loading) loading.classList.add('hidden');
+      }
+    }
+  });
+
   // Check URL parameters: ?room=SPEED-XXXX&game=smw
   const urlParams = new URLSearchParams(window.location.search);
   const roomParam = urlParams.get('room');
@@ -615,17 +722,19 @@ function setupUI() {
 
   if (gameParam && Object.values(GAME_IDS).includes(gameParam)) {
     state.gameId = gameParam;
-    if (gameSelector) gameSelector.setActiveGame(gameParam);
+    if (fcLobby) fcLobby.setActiveGame(gameParam);
   }
 
   if (roomParam) {
-    setMode('ONLINE');
+    state.mode = 'ONLINE';
+    updateArenaHeaders();
     const roomCode = webrtc.formatRoomCode(roomParam);
     document.getElementById('currentRoomCode').textContent = roomCode;
     document.getElementById('roomShareLink').value = `${window.location.origin}/?room=${roomCode}&game=${state.gameId}`;
     document.getElementById('roomCreatedSection').classList.remove('hidden');
     webrtc.joinRoom(roomParam, state.gameId);
     updateChallengeUI();
+    if (fcLobby) fcLobby.switchView('arena');
   }
 }
 
@@ -657,7 +766,7 @@ function updateNetStatus(text, isGood = false) {
   const el = document.getElementById('netStatus');
   if (el) {
     el.textContent = text;
-    el.style.color = isGood ? '#38e45c' : '#fca044';
+    el.style.color = isGood ? '#10b981' : '#fca044';
   }
 }
 
@@ -665,12 +774,6 @@ function updateNetStatus(text, isGood = false) {
 window.addEventListener('DOMContentLoaded', async () => {
   setupUI();
   configureCanvasForGame(state.gameId);
-  const profile = getGameProfile(state.gameId);
-  const titleEl = document.querySelector('.game-title');
-  const badgeEl = document.querySelector('.title-badge');
-  if (titleEl) titleEl.textContent = profile.name.toUpperCase();
-  if (badgeEl) badgeEl.textContent = profile.systemBadge;
-
   await refreshCachedPills();
   await loadRomForGame(state.gameId);
   requestAnimationFrame(gameLoop);

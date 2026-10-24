@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Retro Speedrun VS - Ghost Runner Online & Bot Practice</title>
+  <title>Retro Speedrun VS - Fightcade Online Arcade & Ghost Practice</title>
   <link rel="stylesheet" href="/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <!-- Drag and drop whole screen overlay -->
@@ -19,84 +19,217 @@
     </div>
   </div>
 
-  <div class="arcade-app">
-    <!-- Top Modern Arcade Header Bar -->
-    <header class="arcade-navbar">
-      <!-- Left: Brand Logo & Interactive Game Selector Dropdown -->
-      <div class="nav-left">
-        <div class="brand-zone">
-          <span class="brand-logo">⚡ SPEEDRUN VS</span>
+  <div class="fightcade-app">
+    <!-- Top Fightcade Navigation Bar -->
+    <header class="fc-navbar">
+      <!-- Left: Brand Logo & Channel Breadcrumb -->
+      <div class="fc-nav-left">
+        <div class="fc-logo-badge">
+          <span class="fc-logo-bolt">⚡</span>
+          <span class="fc-logo-text">FIGHTCADE</span>
+          <span class="fc-logo-sub">SPEEDRUN VS</span>
         </div>
-        <div id="gameSelectorBar" class="game-selector-container"></div>
+        <div class="fc-channel-breadcrumb">
+          <span class="fc-current-sys sys-nes" id="fcCurrentSysBadge">NES</span>
+          <span class="fc-current-title" id="fcCurrentGameTitle">Super Mario Bros. (World)</span>
+        </div>
       </div>
 
-      <!-- Center: Race Mode Selector -->
-      <nav class="mode-bar">
-        <button id="modeBotBtn" class="mode-btn active" title="Práctica offline contra bot IA reactivo">
-          🤖 BOT
+      <!-- Center: Main View Tabs (Lobby vs Arena) -->
+      <nav class="fc-nav-center">
+        <button id="viewLobbyBtn" class="fc-nav-tab active" title="Lobby del Canal, Chat Comunitario y Roster de Jugadores">
+          💬 LOBBY & CHAT
         </button>
-        <button id="modeOnlineBtn" class="mode-btn" title="Compite contra un amigo vía WebRTC P2P">
-          🌐 ONLINE
-        </button>
-        <button id="modeSoloBtn" class="mode-btn" title="Entrenamiento Contrarreloj">
-          ⏱️ SOLO
+        <button id="viewArenaBtn" class="fc-nav-tab" title="Pantalla de Juego, Telemetría y Fantasma en Vivo">
+          🎮 ARENA DE JUEGO
         </button>
       </nav>
 
-      <!-- Right: Quick Action Utility Icons -->
-      <div class="nav-utils">
-        <button id="romToggleBtn" class="tool-btn" title="Ver / Cambiar ROM en Caché">💾 ROM</button>
-        <button id="audioToggleBtn" class="tool-btn" title="Sonido: On/Off">🔊</button>
-        <button id="resetGameBtn" class="tool-btn" title="Reiniciar Carrera">🔄</button>
-        <button id="touchToggleBtn" class="tool-btn" title="Alternar Controles Táctiles">🎮</button>
-        <button id="fullscreenBtn" class="tool-btn" title="Pantalla Completa">⛶</button>
+      <!-- Right: Quick Utilities & Player Status -->
+      <div class="fc-nav-right">
+        <button id="romToggleBtn" class="fc-tool-btn" title="Gestionar ROMs en Caché Permanente">💾 ROMS</button>
+        <button id="audioToggleBtn" class="fc-tool-btn" title="Sonido: On/Off">🔊</button>
+        <button id="resetGameBtn" class="fc-tool-btn" title="Reiniciar Carrera">🔄</button>
+        <button id="touchToggleBtn" class="fc-tool-btn" title="Alternar Controles Táctiles (Móvil)">🎮</button>
+        <button id="fullscreenBtn" class="fc-tool-btn" title="Pantalla Completa">⛶</button>
+        <div class="fc-user-status-pill" id="fcLocalUserPill">
+          <span class="status-dot online"></span>
+          <span class="fc-username">Mario_Speed [TÚ]</span>
+        </div>
       </div>
     </header>
 
-    <!-- Collapsible ROM Cache & Net Status Drawer -->
+    <!-- Collapsible ROM Cache Drawer (Opens via 💾 ROMS button) -->
     <div id="subBarDrawer" class="sub-bar-drawer">
       <section id="romCacheBar" class="rom-cache-section"></section>
-      <div id="netStatus" class="net-status">Modo: MARIO [YOU] vs MARIO [BOT] • Práctica</div>
+      <div id="netStatus" class="net-status">Modo: MARIO [TÚ] vs MARIO [BOT] • Práctica</div>
     </div>
 
-    <!-- Centerpiece: Main Arcade Game Viewport (Hero Screen) -->
-    <main class="arcade-viewport">
-      <div class="canvas-wrapper">
-        <div class="screen-bezel">
-          <canvas id="gameCanvas" width="256" height="280"></canvas>
+    <!-- Main 3-Column Fightcade Dashboard Body -->
+    <div class="fc-body">
+      <!-- COLUMN 1: GAME CHANNELS LIST (LEFT) -->
+      <aside class="fc-sidebar-channels">
+        <div class="fc-panel-header">
+          <span class="header-title">CANALES DE JUEGOS</span>
+          <span class="fc-count-tag" id="totalGamesCount">5</span>
         </div>
-
-        <!-- Synchronized 3-2-1 Countdown Overlay -->
-        <div id="countdownOverlay" class="countdown-overlay">
-          <div id="countdownNumber" class="countdown-tick">3</div>
+        <div class="fc-channel-search">
+          <input type="text" id="channelSearchInput" placeholder="Buscar juego o sistema...">
         </div>
+        <div class="fc-channels-list" id="fcChannelsList">
+          <!-- Rendered dynamically by fightcade_lobby.js -->
+        </div>
+      </aside>
 
-        <!-- Loading / ROM Missing Overlay -->
-        <div id="loadingOverlay" class="overlay">
-          <div class="loader-box">
-            <div class="spinner"></div>
-            <p id="loadingStatus">Iniciando motor retro...</p>
+      <!-- COLUMN 2: CENTER VIEW (CHAT & LOBBY or GAME ARENA) -->
+      <main class="fc-main-view">
+        <!-- 2A. CHANNEL LOBBY & CHAT VIEW -->
+        <section id="fcLobbySection" class="fc-lobby-panel active">
+          <!-- Channel Top Banner -->
+          <div class="fc-channel-banner">
+            <div class="banner-info">
+              <div class="banner-badge-row">
+                <span class="fc-game-sys-badge sys-nes" id="bannerSysBadge">NES</span>
+                <span class="fc-game-cat-badge">ANY% GLITCHLESS • 1v1 GHOST RUNNER</span>
+                <button id="bannerRomStatus" class="fc-rom-status-badge cached" title="ROM guardada en IndexedDB">
+                  💾 ROM CACHEADA
+                </button>
+              </div>
+              <h1 class="banner-game-name" id="bannerGameTitle">Super Mario Bros. (World)</h1>
+              <p class="banner-game-desc" id="bannerGameDesc">
+                1v1 Speedrun en tiempo real. Ambos corren como Mario (tú sólido, tu rival como fantasma traslúcido).
+              </p>
+            </div>
+            <div class="banner-actions">
+              <button id="btnPlayPractice" class="fc-action-btn primary" title="Entrar a la pista contra Bot o Solo">
+                ⚡ JUGAR OFFLINE / PRÁCTICA
+              </button>
+              <button id="btnCreateChallenge" class="fc-action-btn secondary" title="Crear Sala P2P para desafiar por enlace WebRTC">
+                🌐 CREAR SALA P2P
+              </button>
+            </div>
+          </div>
+
+          <!-- Community Chat Feed & Match Events Stream -->
+          <div class="fc-chat-container">
+            <div class="fc-chat-header">
+              <span class="chat-title"># CANAL DE CHAT Y ACTIVIDAD DE CARRERAS</span>
+              <span class="chat-topic" id="chatTopic">Comunidad speedrunner activa • Desafía a un rival de la lista o envía un mensaje</span>
+            </div>
+            <div class="fc-chat-messages" id="fcChatMessages">
+              <!-- Messages stream rendered dynamically -->
+            </div>
+            <form id="fcChatForm" class="fc-chat-input-bar">
+              <input type="text" id="fcChatInput" placeholder="Escribe un mensaje en #super-mario-bros..." autocomplete="off">
+              <button type="submit" class="fc-chat-send-btn">ENVIAR</button>
+            </form>
+          </div>
+        </section>
+
+        <!-- 2B. GAME ARENA VIEW (The 4:3 Canvas, Telemetry & Ghost) -->
+        <section id="fcArenaSection" class="fc-arena-panel">
+          <div class="fc-arena-header">
+            <div class="fc-arena-match-info">
+              <span class="match-mode-tag" id="arenaModeTag">1v1 SPEEDRUN RACE</span>
+              <span class="match-rival-tag" id="arenaRivalTag">MARIO [TÚ] vs MARIO [FANTASMA BOT]</span>
+            </div>
+            <div class="fc-arena-controls">
+              <button id="btnArenaBackToLobby" class="fc-back-btn">
+                💬 VOLVER AL LOBBY / CHAT
+              </button>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper">
+            <div class="screen-bezel">
+              <canvas id="gameCanvas" width="256" height="280"></canvas>
+            </div>
+
+            <!-- Synchronized 3-2-1 Countdown Overlay -->
+            <div id="countdownOverlay" class="countdown-overlay">
+              <div id="countdownNumber" class="countdown-tick">3</div>
+            </div>
+
+            <!-- Loading / ROM Missing Overlay -->
+            <div id="loadingOverlay" class="overlay">
+              <div class="loader-box">
+                <div class="spinner"></div>
+                <p id="loadingStatus">Iniciando motor retro...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Virtual Gamepad (Hidden on Desktop PC by default) -->
+          <div id="touchControlsContainer" class="touch-container"></div>
+
+          <!-- In-Arena Quick Keybindings -->
+          <div class="fc-arena-footer">
+            <div class="key-guide">
+              <span class="key-pill"><kbd>◀</kbd><kbd>▶</kbd> / <kbd>A</kbd><kbd>D</kbd> Mover</span>
+              <span class="key-pill"><kbd>Z</kbd> / <kbd>J</kbd> Correr / Turbo</span>
+              <span class="key-pill"><kbd>X</kbd> / <kbd>K</kbd> Saltar</span>
+              <span class="key-pill"><kbd>C</kbd> / <kbd>L</kbd> Giro / Spindash</span>
+              <span class="key-pill"><kbd>Enter</kbd> Start</span>
+              <span class="key-pill"><kbd>Shift</kbd> Select</span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- COLUMN 3: PLAYERS ROSTER & CHALLENGES (RIGHT) -->
+      <aside class="fc-sidebar-roster">
+        <div class="fc-panel-header">
+          <span class="header-title">JUGADORES EN SALA</span>
+          <span class="fc-count-tag" id="fcOnlineCount">6</span>
+        </div>
+        <div class="fc-roster-tabs">
+          <button class="fc-tab-btn active" data-filter="all">TODOS (<span id="tabCountAll">6</span>)</button>
+          <button class="fc-tab-btn" data-filter="ready">LISTOS (<span id="tabCountReady">4</span>)</button>
+          <button class="fc-tab-btn" data-filter="playing">JUGANDO (<span id="tabCountPlaying">2</span>)</button>
+        </div>
+        <div class="fc-roster-list" id="fcRosterList">
+          <!-- Roster Cards with Avatar, Name, Ping, Rank, and [⚡ DESAFIAR] button -->
+        </div>
+        <!-- User Self Status Card at Bottom of Roster -->
+        <div class="fc-self-card">
+          <div class="self-avatar-wrap">
+            <div class="self-avatar-icon">🍄</div>
+            <span class="self-status-indicator online"></span>
+          </div>
+          <div class="self-info">
+            <input type="text" id="fcSelfNameInput" class="self-name-input" value="Mario_Speed" maxlength="15" title="Haz clic para cambiar tu nombre de jugador">
+            <span class="self-role">Mario (Local Sólido)</span>
           </div>
         </div>
-      </div>
-
-      <!-- Mobile Virtual Gamepad (Hidden on Desktop PC by default) -->
-      <div id="touchControlsContainer" class="touch-container"></div>
-    </main>
-
-    <!-- Keybindings Guide -->
-    <footer class="arcade-footer">
-      <div class="key-guide">
-        <span class="key-pill"><kbd>◀</kbd><kbd>▶</kbd> / <kbd>A</kbd><kbd>D</kbd> Mover</span>
-        <span class="key-pill"><kbd>Z</kbd> / <kbd>J</kbd> Correr / Y</span>
-        <span class="key-pill"><kbd>X</kbd> / <kbd>K</kbd> Saltar / A</span>
-        <span class="key-pill"><kbd>C</kbd> / <kbd>L</kbd> Spindash / Giro</span>
-        <span class="key-pill"><kbd>Enter</kbd> Start</span>
-        <span class="key-pill"><kbd>Shift</kbd> Select</span>
-      </div>
-      <div class="legal-note">Multi-System Speedrun VS • 60 FPS Pixel-Perfect • WebRTC P2P</div>
-    </footer>
+      </aside>
+    </div>
   </div>
+
+  <!-- Fightcade Incoming Challenge Alert Modal -->
+  <dialog id="fcChallengeIncomingModal" class="fc-retro-modal">
+    <div class="fc-modal-box">
+      <div class="fc-modal-header">
+        <span class="fc-modal-bell">⚔️</span>
+        <h3>¡DESAFÍO SPEEDRUN RECIBIDO!</h3>
+      </div>
+      <div class="fc-modal-body">
+        <div class="fc-challenger-card">
+          <div class="challenger-avatar" id="challengerAvatar">🍄</div>
+          <div class="challenger-details">
+            <div class="challenger-name" id="challengerName">SpeedRunner_99</div>
+            <div class="challenger-meta">Te desafía a una carrera en <strong id="challengeGameName">Super Mario Bros.</strong></div>
+          </div>
+        </div>
+        <div class="fc-timer-bar-wrap">
+          <div class="fc-timer-bar" id="challengeTimerBar"></div>
+        </div>
+      </div>
+      <div class="fc-modal-actions">
+        <button id="fcAcceptChallengeBtn" class="btn-fc-accept">✔ ACEPTAR DESAFÍO</button>
+        <button id="fcDeclineChallengeBtn" class="btn-fc-decline">✖ RECHAZAR</button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- Room Modal for WebRTC Online Matchmaking -->
   <dialog id="roomModal" class="retro-dialog">
